@@ -1,11 +1,18 @@
 
 package cl.duoc.bitacora2
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.modifier.modifierLocalOf
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteBitacorasScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteScreen
+import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteBitacoraScreen
+import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteBitacorasScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteScreen
 import cl.duoc.bitacora2.ui.theme.login.LoginScreen
 
@@ -33,7 +40,8 @@ fun Navegacion() {
                 nombre = "Estudiante",
                 curso = "5° básico",
                 onCursos = {
-                    // Pendiente de conectar
+                    // Se usa una ruta válida registrada en el NavHost
+                    navController.navigate("EstudianteBitacoraScreen")
                 },
                 onBitacoras = {
                     // Pendiente de conectar
@@ -52,6 +60,34 @@ fun Navegacion() {
                 }
             )
         }
+        // --- PANTALLA DE LISTA DE BITÁCORAS / CURSOS ---
+        composable("EstudianteBitacoraScreen") {
+            EstudianteBitacorasScreen(
+
+                titulo = "Mis cursos y asignaturas",
+
+                bitacoras = emptyList(), // Puedes pasar tu lista de bitácoras aquí
+                onVolver = {
+                    navController.popBackStack()
+                },
+                onAbrir = { id ->
+                    navController.navigate("estudiante_bitacora_detalle")
+                }
+            )
+        }
+
+        // --- PANTALLA DE DETALLE DE BITÁCORA ---
+        composable("estudiante_bitacora_detalle") {
+            EstudianteBitacoraScreen(
+                bitacora = null, // Puedes pasar la bitácora seleccionada
+                onVolver = {
+                    navController.popBackStack()
+                },
+                onNuevoRegistro = {
+                    // Acción para crear nuevo registro
+                }
+            )
+        }
 
         composable("docente") {
             DocenteScreen(
@@ -59,6 +95,8 @@ fun Navegacion() {
                 aportesPendientes = 0,
                 recordatoriosPendientes = 0,
                 onCursos = {
+                    navController.navigate("docente_bitacoras")
+
                     // Pendiente de conectar
                 },
                 onCrear = {

@@ -48,13 +48,14 @@ fun EstudianteBitacorasScreen(
 ) {
     PantallaBase(titulo = titulo, onVolver = onVolver) {
         if (bitacoras.isEmpty()) {
+
             item { Text("No hay bitácoras publicadas para mostrar.") }
         }
         items(bitacoras) { b ->
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text("BITÁCORA ACTIVA", color = MaterialTheme.colorScheme.primary)
                     Text(b.titulo, style = MaterialTheme.typography.titleMedium)
