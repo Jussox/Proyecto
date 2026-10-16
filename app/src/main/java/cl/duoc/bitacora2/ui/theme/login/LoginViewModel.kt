@@ -1,6 +1,9 @@
 package cl.duoc.bitacora2.ui.theme.login
 
 import androidx.lifecycle.ViewModel
+import cl.duoc.bitacora2.util.credencialesCorrectas
+import cl.duoc.bitacora2.util.validarPasswordLogin
+import cl.duoc.bitacora2.util.validarUsuario
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
