@@ -13,6 +13,7 @@ import cl.duoc.bitacora2.data.Asignacion
 import androidx.compose.ui.Alignment
 
 
+
 @Composable
 fun PantallaBase(
     titulo: String,
@@ -29,9 +30,7 @@ fun PantallaBase(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (onVolver != null) {
-                    IconButton(
-                        onClick = { onVolver() }
-                    ) {
+                    IconButton(onClick = { onVolver() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver"
@@ -56,6 +55,7 @@ fun PantallaBase(
         )
     }
 }
+
 
 @Composable
 fun BotonAncho(texto: String, onClick: () -> Unit) {

@@ -64,6 +64,20 @@ class BitacoraViewModel(
                 initialValue = emptyList()
             )
 
+    //Registro e historial estudiante
+
+    fun actualizarRegistro(registro: Registro) {
+        viewModelScope.launch {
+            repository.actualizarRegistro(registro)
+        }
+    }
+
+    fun eliminarRegistro(id: Int) {
+        viewModelScope.launch {
+            repository.eliminarRegistro(id)
+        }
+    }
+
     // Acciones del docente
     fun guardarBitacora(bitacora: Bitacora) {
         viewModelScope.launch {
@@ -120,6 +134,7 @@ class BitacoraViewModel(
             repository.guardarRegistro(registro)
         }
     }
+
 
     fun enviarRegistro(id: Int) {
         viewModelScope.launch {

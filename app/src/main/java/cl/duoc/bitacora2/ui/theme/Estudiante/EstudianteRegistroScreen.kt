@@ -7,26 +7,61 @@ import cl.duoc.bitacora2.data.fechaHoy
 import cl.duoc.bitacora2.data.Bitacora
 import cl.duoc.bitacora2.ui.theme.comun.*
 
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 @Composable
 fun EstudianteRegistroScreen(
     bitacora: Bitacora?,
     estudiante: String,
+    registroExistente: Registro? = null,
     onVolver: () -> Unit,
     onGuardar: (Registro) -> Unit
 ) {
-    var fecha by remember { mutableStateOf("") }
-    var contenido by remember { mutableStateOf("") }
-    var actividad by remember { mutableStateOf("") }
-    var aprendizaje by remember { mutableStateOf("") }
-    var dudas by remember { mutableStateOf("") }
-    var fotografias by remember { mutableStateOf("") }
-    var archivos by remember { mutableStateOf("") }
-    var enlaces by remember { mutableStateOf("") }
-    var mensaje by remember { mutableStateOf("") }
-    var mensajeEsError by remember { mutableStateOf(false) }
+    var fecha by remember(registroExistente?.id) {
+        mutableStateOf(registroExistente?.fechaClase ?: "")
+    }
+    var contenido by remember(registroExistente?.id) {
+        mutableStateOf(registroExistente?.contenido ?: "")
+    }
+    var actividad by remember(registroExistente?.id) {
+        mutableStateOf(registroExistente?.actividad ?: "")
+    }
+    var aprendizaje by remember(registroExistente?.id) {
+        mutableStateOf(registroExistente?.aprendizaje ?: "")
+    }
+    var dudas by remember(registroExistente?.id) {
+        mutableStateOf(registroExistente?.dudas ?: "")
+    }
+    var fotografias by remember(registroExistente?.id) {
+        mutableStateOf(registroExistente?.fotografias ?: "")
+    }
+    var archivos by remember(registroExistente?.id) {
+        mutableStateOf(registroExistente?.archivos ?: "")
+    }
+    var enlaces by remember(registroExistente?.id) {
+        mutableStateOf(registroExistente?.enlaces ?: "")
+    }
+    var mensaje by remember {
+        mutableStateOf("")
+    }
+    var mensajeEsError by remember {
+        mutableStateOf(false)
+    }
+
+    fun fechaValida(fecha: String): Boolean {
+        return try {
+            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            formato.isLenient = false
+            formato.parse(fecha) != null
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     fun construir(estado: String): Registro {
         return Registro(
+            id = registroExistente?.id ?: 0,
             bitacoraId = bitacora?.id ?: 0,
             estudiante = estudiante,
             fechaClase = fecha,
@@ -38,8 +73,16 @@ fun EstudianteRegistroScreen(
             archivos = archivos,
             enlaces = enlaces,
             estado = estado,
-            fechaCreacion = fechaHoy(),
-            fechaEnvio = if (estado == "pendiente") fechaHoy() else ""
+            comentario = registroExistente?.comentario ?: "",
+            fechaCreacion = registroExistente?.fechaCreacion ?: fechaHoy(),
+            fechaEnvio = if (estado == "pendiente") {
+                fechaHoy()
+            } else {
+                registroExistente?.fechaEnvio ?: ""
+            },
+            fechaRetroalimentacion =
+                registroExistente?.fechaRetroalimentacion ?: "",
+            docenteRevisor = registroExistente?.docenteRevisor ?: ""
         )
     }
 
@@ -80,8 +123,9 @@ fun EstudianteRegistroScreen(
 
             item {
                 BotonSecundario("Guardar borrador") {
-                    if (fecha.isBlank()) {
-                        mensaje = "Indique la fecha de la clase para guardar el borrador"
+                    //respeta formato de la fecha
+                    if (!fechaValida(fecha)) {
+                        mensaje = "Ingrese una fecha válida con formato dd/MM/aaaa (ejemplo: 16/10/2026)"
                         mensajeEsError = true
                     } else {
                         onGuardar(construir("borrador"))
@@ -93,8 +137,12 @@ fun EstudianteRegistroScreen(
             }
             item {
                 BotonAncho("Enviar al docente") {
-                    if (fecha.isBlank() || contenido.isBlank() || actividad.isBlank() || aprendizaje.isBlank()) {
-                        mensaje = "Complete fecha, contenido, actividad y qué aprendió para enviar"
+                    if (!fechaValida(fecha) ||
+                        contenido.isBlank() ||
+                        actividad.isBlank() ||
+                        aprendizaje.isBlank()
+                    ) {
+                        mensaje = "Ingrese una fecha válida (dd/MM/aaaa) y complete contenido, actividad y aprendizaje"
                         mensajeEsError = true
                     } else {
                         onGuardar(construir("pendiente"))

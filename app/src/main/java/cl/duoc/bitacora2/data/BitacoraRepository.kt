@@ -34,6 +34,14 @@ class BitacoraRepository(
         dao.enviarRegistro(id, fecha)
     }
 
+    suspend fun eliminarRegistro(id: Int) {
+        dao.eliminarRegistro(id)
+    }
+
+    suspend fun actualizarRegistro(registro: Registro) {
+        dao.actualizarRegistro(registro)
+    }
+
     suspend fun guardarComentario(id: Int, comentario: String, fecha: String, docente: String) {
         dao.guardarComentario(id, comentario, fecha, docente)
     }

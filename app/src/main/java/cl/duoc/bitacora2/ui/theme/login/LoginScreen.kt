@@ -24,10 +24,11 @@ import cl.duoc.bitacora2.ui.theme.Bitacora2Theme
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onIrAEstudiante: () -> Unit,
-    onIrADocente: () -> Unit,
+    onIrAEstudiante: (String) -> Unit,
+    onIrADocente: (String) -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold { innerPadding ->

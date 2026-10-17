@@ -33,31 +33,39 @@ class LoginViewModel : ViewModel() {
     }
 
     fun iniciarSesion(
-        onEstudianteValido: () -> Unit,
-        onDocenteValido: () -> Unit
+        onEstudianteValido: (String) -> Unit,
+        onDocenteValido: (String) -> Unit
     ) {
         val estado = _uiState.value
 
         if (!validarUsuario(estado.usuario) || !validarPasswordLogin(estado.password)) {
             _uiState.update { estadoActual ->
-                estadoActual.copy(mensajeError = "Debe ingresar usuario y contraseña")
+                estadoActual.copy(
+                    mensajeError = "Debe ingresar usuario y contraseña"
+                )
             }
             return
         }
 
         if (!credencialesCorrectas(estado.perfil, estado.usuario, estado.password)) {
             _uiState.update { estadoActual ->
-                estadoActual.copy(mensajeError = "Usuario o contraseña incorrectos")
+                estadoActual.copy(
+                    mensajeError = "Usuario o contraseña incorrectos"
+                )
             }
             return
         }
 
+// Conservamos el usuario que inició sesión.
+        val usuarioAutenticado = estado.usuario
+
         _uiState.value = LoginUiState()
 
         if (estado.perfil == "estudiante") {
-            onEstudianteValido()
+            onEstudianteValido(usuarioAutenticado)
         } else {
-            onDocenteValido()
+            onDocenteValido(usuarioAutenticado)
         }
+
     }
 }

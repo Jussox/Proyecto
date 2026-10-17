@@ -3,6 +3,7 @@ package cl.duoc.bitacora2.data
 import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.Query
+import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -34,6 +35,12 @@ interface BitacoraDao {
 
     @Query("UPDATE registros SET estado = 'revisado' WHERE id = :id")
     suspend fun marcarRevisado(id: Int)
+
+    @Query("DELETE FROM registros WHERE id = :id")
+    suspend fun eliminarRegistro(id: Int)
+
+    @Update
+    suspend fun actualizarRegistro(registro: Registro)
 
     @Insert
     suspend fun insertarRecordatorio(recordatorio: Recordatorio)
