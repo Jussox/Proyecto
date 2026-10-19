@@ -64,7 +64,7 @@ fun AdjuntosSection(
                     .fillMaxWidth()
                     .height(250.dp)
                     .clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.FillWidth
             )
             BotonSecundario("Quitar fotografía") { onFotoCambio("") }
         }

@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,13 +19,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cl.duoc.bitacora2.data.Bitacora
 import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
 import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
 import cl.duoc.bitacora2.ui.theme.comun.Dato
+import cl.duoc.bitacora2.ui.theme.comun.EstadoTexto
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
-import cl.duoc.bitacora2.ui.theme.comun.nombreEstado
+import cl.duoc.bitacora2.ui.theme.comun.colorEstado
 
 import cl.duoc.bitacora2.data.Registro
 
@@ -45,7 +50,29 @@ fun EstudianteScreen(
         item { BotonAncho("Bitácoras mensuales publicadas") { onBitacoras() } }
         item { BotonAncho("Estado e historial") { onHistorial() } }
         item { BotonAncho("Retroalimentación del docente") { onRetroalimentacion() } }
-        item { BotonSecundario("Cerrar sesión") { onCerrarSesion() } }
+
+        item {
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+        }
+
+
+        item {
+            Button(
+                onClick = { onCerrarSesion() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF9F3434),
+                    contentColor = Color.White
+                )
+            ) {
+
+                Text("Cerrar sesión")
+            }
+        }
     }
 }
 
@@ -67,7 +94,7 @@ fun EstudianteBitacorasScreen(
                     modifier = Modifier.padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("BITÁCORA ACTIVA", color = MaterialTheme.colorScheme.primary)
+                    Text("BITÁCORA ACTIVA", color = colorEstado("publicada"))
                     Text(b.titulo, style = MaterialTheme.typography.titleMedium)
                     Text("${b.curso} · ${b.asignatura}")
                     Text("${b.mes} ${b.anio}")
@@ -140,7 +167,7 @@ fun EstudianteHistorialScreen(
                     Text("Asignatura: ${bitacora?.asignatura ?: "No disponible"}")
                     Text("Fecha de clase: ${registro.fechaClase}")
                     Text("Contenido: ${registro.contenido}")
-                    Text("Estado: ${nombreEstado(registro.estado)}")
+                    EstadoTexto(registro.estado)
                     Text("Creado: ${registro.fechaCreacion}")
 
                     BotonAncho("Seguir editándolo") {

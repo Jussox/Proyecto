@@ -1,13 +1,16 @@
 package cl.duoc.bitacora2.ui.theme.login
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import cl.duoc.bitacora2.util.credencialesCorrectas
 import cl.duoc.bitacora2.util.validarPasswordLogin
 import cl.duoc.bitacora2.util.validarUsuario
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
 
@@ -16,7 +19,10 @@ class LoginViewModel : ViewModel() {
 
     fun cambiarPerfil(nuevoPerfil: String) {
         _uiState.update { estadoActual ->
-            estadoActual.copy(perfil = nuevoPerfil, mensajeError = "")
+            estadoActual.copy(
+                perfil = nuevoPerfil,
+                mensajeError = ""
+            )
         }
     }
 
@@ -38,34 +44,67 @@ class LoginViewModel : ViewModel() {
     ) {
         val estado = _uiState.value
 
-        if (!validarUsuario(estado.usuario) || !validarPasswordLogin(estado.password)) {
-            _uiState.update { estadoActual ->
-                estadoActual.copy(
-                    mensajeError = "Debe ingresar usuario y contraseña"
-                )
+        // Evita iniciar varios intentos simultáneamente.
+        if (estado.cargando) return
+
+        // Mostrar el indicador y limpiar errores anteriores.
+        _uiState.update {
+            it.copy(
+                cargando = true,
+                mensajeError = ""
+            )
+        }
+
+        viewModelScope.launch {
+            // Permite que el usuario vea la animación.
+            // En una autenticación real, se esperaría la respuesta
+            // del servicio en lugar de utilizar este retraso.
+            delay(2000)
+
+            if (
+                !validarUsuario(estado.usuario) ||
+                !validarPasswordLogin(estado.password)
+            ) {
+                _uiState.update {
+                    it.copy(
+                        cargando = false,
+                        mensajeError =
+                            "Debe ingresar usuario y contraseña"
+                    )
+                }
+                return@launch
             }
-            return
-        }
 
-        if (!credencialesCorrectas(estado.perfil, estado.usuario, estado.password)) {
-            _uiState.update { estadoActual ->
-                estadoActual.copy(
-                    mensajeError = "Usuario o contraseña incorrectos"
+            if (
+                !credencialesCorrectas(
+                    estado.perfil,
+                    estado.usuario,
+                    estado.password
                 )
+            ) {
+                _uiState.update {
+                    it.copy(
+                        cargando = false,
+                        mensajeError =
+                            "Usuario o contraseña incorrectos"
+                    )
+                }
+                return@launch
             }
-            return
+
+            // Guardamos el usuario autenticado.
+            val usuarioAutenticado = estado.usuario
+            val perfilAutenticado = estado.perfil
+
+            // Limpiamos el estado del formulario.
+            _uiState.value = LoginUiState()
+
+            // Navegamos según el perfil seleccionado.
+            if (perfilAutenticado == "estudiante") {
+                onEstudianteValido(usuarioAutenticado)
+            } else {
+                onDocenteValido(usuarioAutenticado)
+            }
         }
-
-// Conservamos el usuario que inició sesión.
-        val usuarioAutenticado = estado.usuario
-
-        _uiState.value = LoginUiState()
-
-        if (estado.perfil == "estudiante") {
-            onEstudianteValido(usuarioAutenticado)
-        } else {
-            onDocenteValido(usuarioAutenticado)
-        }
-
     }
 }

@@ -58,7 +58,7 @@ fun DocenteParticipacionScreen(
                 item { Dato("Estudiantes participantes", "${participantes.size}") }
                 item { Dato("Estudiantes sin participación", "${sinParticipacion.size}") }
                 item { Dato("Aportes enviados", "${enviados.size}") }
-                item { Dato("Aportes pendientes de revisión", "$pendientes") }
+                //item { Dato("Aportes pendientes de revisión", "$pendientes") }
                 item { Dato("Aportes revisados", "$revisados") }
             }
 

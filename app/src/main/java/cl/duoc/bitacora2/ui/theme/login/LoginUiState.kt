@@ -4,5 +4,6 @@ data class LoginUiState(
     val perfil: String = "estudiante",
     val usuario: String = "",
     val password: String = "",
-    val mensajeError: String = ""
+    val mensajeError: String = "",
+    val cargando: Boolean = false
 )

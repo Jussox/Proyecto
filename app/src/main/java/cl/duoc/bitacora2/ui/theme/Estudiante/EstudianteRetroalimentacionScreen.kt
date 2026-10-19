@@ -15,6 +15,7 @@ import cl.duoc.bitacora2.data.Bitacora
 import cl.duoc.bitacora2.data.DatosPrueba
 import cl.duoc.bitacora2.data.Registro
 import cl.duoc.bitacora2.ui.theme.comun.Dato
+import cl.duoc.bitacora2.ui.theme.comun.EstadoTexto
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 
 @Composable
@@ -46,10 +47,7 @@ fun EstudianteRetroalimentacionScreen(
                     Text("${b?.curso ?: ""} · ${b?.asignatura ?: ""}")
                     Dato("Clase del", r.fechaClase)
                     Dato("Contenido trabajado", r.contenido)
-                    Text(
-                        "Estado: ${if (r.estado == "revisado") "Revisado" else r.estado}",
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    EstadoTexto(r.estado)
                     if (r.comentario.isNotBlank()) {
                         Text("Comentario del docente:", style = MaterialTheme.typography.titleSmall)
                         Text(r.comentario)

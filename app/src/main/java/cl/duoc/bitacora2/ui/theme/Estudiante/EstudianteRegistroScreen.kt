@@ -125,24 +125,11 @@ fun EstudianteRegistroScreen(
 
             item { Campo(archivos, "Archivos adjuntos (nombre del archivo)") { archivos = it } }
 
-            if (mensaje.isNotEmpty()) {
-                item {
-                    Text(
-                        text = mensaje,
-                        color = if (mensajeEsError) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-
-            if (mensaje.isNotEmpty()) {
-                item {
-                    Text(
-                        text = mensaje,
-                        color = if (mensajeEsError) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.primary
-                    )
-                }
+            item {
+                MensajeAnimado(
+                    texto = mensaje,
+                    esError = mensajeEsError
+                )
             }
 
             item {

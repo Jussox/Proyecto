@@ -21,6 +21,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.bitacora2.ui.theme.Bitacora2Theme
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.graphics.Color
+
+
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
@@ -93,7 +103,9 @@ fun LoginScreen(
                 label = {
                     Text("Nombre de usuario")
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.cargando
+
             )
 
             OutlinedTextField(
@@ -104,10 +116,15 @@ fun LoginScreen(
                 label = {
                     Text("Contraseña")
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.cargando
             )
-
-            if (uiState.mensajeError.isNotEmpty()) {
+            //"AnimatedVisibility" muestra el círculo con una animación.
+            AnimatedVisibility(
+                visible = uiState.mensajeError.isNotEmpty(),
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
                 Text(
                     text = uiState.mensajeError,
                     color = MaterialTheme.colorScheme.error
@@ -121,9 +138,35 @@ fun LoginScreen(
                         onDocenteValido = onIrADocente
                     )
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.cargando
             ) {
                 Text("Iniciar sesión")
+            }
+
+            // Indicador circular debajo del botón.
+            AnimatedVisibility(
+                visible = uiState.cargando,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    //el circulo de carga
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(28.dp),
+                        strokeWidth = 3.dp,
+                        color = Color.Green
+                    )
+
+                    Text(
+                        text = "Verificando acceso...",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
     }

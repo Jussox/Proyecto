@@ -24,7 +24,7 @@ object DatosPrueba {
 
     val usuarios = listOf(
         UsuarioPrueba("estudiante1", "clave1234", "estudiante", "Angie", "7.º Básico A"),
-        UsuarioPrueba("estudiante2", "clave1234", "estudiante", "Leo", "7.º Básico A"),
+        UsuarioPrueba("estudiante2", "clave1234", "estudiante", "Leon S Kennedy", "7.º Básico A"),
         UsuarioPrueba("estudiante3", "clave1234", "estudiante", "Estudiante Prueba 3", "7.º Básico A"),
         UsuarioPrueba("estudiante4", "clave1234", "estudiante", "Estudiante Prueba 4", "8.º Básico B"),
         UsuarioPrueba("docente1", "clave1234", "docente", "Docente Prueba 1", ""),
