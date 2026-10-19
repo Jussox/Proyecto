@@ -1,11 +1,14 @@
 package cl.duoc.bitacora2.ui.theme.Docente
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,6 +18,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import cl.duoc.bitacora2.data.Bitacora
 import cl.duoc.bitacora2.data.DatosPrueba
@@ -26,6 +31,7 @@ import cl.duoc.bitacora2.ui.theme.comun.Campo
 import cl.duoc.bitacora2.ui.theme.comun.Dato
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 import cl.duoc.bitacora2.ui.theme.comun.nombreEstado
+import coil3.compose.AsyncImage
 
 @Composable
 fun DocenteAportesScreen(
@@ -104,7 +110,21 @@ fun DocenteRevisionScreen(
             item { Dato("Actividad realizada", registro.actividad) }
             item { Dato("Qué aprendió", registro.aprendizaje) }
             item { Dato("Dudas o dificultades", registro.dudas) }
-            item { Dato("Fotografías", registro.fotografias) }
+            item { Text("Fotografías:") }
+            if (registro.fotografias.isBlank()) {
+                item { Text("—") }
+            } else {
+                item {
+                    AsyncImage(
+                        model = Uri.parse(registro.fotografias),
+                        contentDescription = "Fotografía del estudiante",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.FillWidth
+                    )
+                }
+            }
             item { Dato("Archivos adjuntos", registro.archivos) }
             item { Dato("Enlaces relacionados", registro.enlaces) }
             item { Dato("Estado", nombreEstado(registro.estado)) }

@@ -10,19 +10,29 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteAportesScreen
 
 import cl.duoc.bitacora2.data.Bitacora
 import cl.duoc.bitacora2.data.DatosPrueba
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteAportesScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteBitacorasScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteCrearBitacoraScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteParticipacionScreen
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteRecordatoriosScreen
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteRevisionScreen
 
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteBitacorasScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteBitacoraScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteHistorialScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteRegistroScreen
+import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteRetroalimentacionScreen
+
+
 
 import cl.duoc.bitacora2.ui.theme.login.LoginScreen
 
@@ -34,6 +44,13 @@ fun Navegacion() {
     val bitacoras by viewModel.bitacoras.collectAsState()
 
     val registros by viewModel.registros.collectAsState()
+
+    val recordatorios by viewModel.recordatorios.collectAsState()
+
+    val bitacorasDocente = bitacoras.filter { it.docente == viewModel.usuarioActual }
+    val registrosDocente = registros.filter { r ->
+        bitacorasDocente.any { it.id == r.bitacoraId }
+    }
 
     NavHost(
         navController = navController,
@@ -70,8 +87,7 @@ fun Navegacion() {
                     navController.navigate("estudiante_historial")
                 },
                 onRetroalimentacion = {
-                    // Pendiente: no hay una pantalla independiente
-                    // confirmada para esta opción.
+                    navController.navigate("estudiante_retroalimentacion")
                 },
                 onCerrarSesion = {
                     navController.popBackStack(
@@ -179,6 +195,15 @@ fun Navegacion() {
             )
         }
 
+        // RETROALIMENTACIÓN DEL ESTUDIANTE
+        composable("estudiante_retroalimentacion") {
+            EstudianteRetroalimentacionScreen(
+                registros = registros.filter { it.estudiante == viewModel.usuarioActual },
+                bitacoras = bitacoras,
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
         // EDITAR REGISTRO EXISTENTE
         composable(
             route = "estudiante_editar_registro/{registroId}",
@@ -224,8 +249,10 @@ fun Navegacion() {
         composable("docente") {
             DocenteScreen(
                 nombre = DatosPrueba.nombreDe(viewModel.usuarioActual),
-                aportesPendientes = 0,
-                recordatoriosPendientes = 0,
+                aportesPendientes = registrosDocente.count { it.estado == "pendiente" },
+                recordatoriosPendientes = recordatorios.count {
+                    it.docente == viewModel.usuarioActual && it.estado == "pendiente"
+                },
 
                 onCursos = {
                     navController.navigate("docente_bitacoras")
@@ -240,11 +267,11 @@ fun Navegacion() {
                 },
 
                 onAportes = {
-                    // Pendiente de conectar con la pantalla de aportes.
+                    navController.navigate("docente_aportes_general/todos")
                 },
 
                 onPendientes = {
-                    // Pendiente de conectar con la pantalla de pendientes.
+                    navController.navigate("docente_aportes_general/pendiente")
                 },
 
                 onParticipacion = {
@@ -256,8 +283,7 @@ fun Navegacion() {
                 },
 
                 onHistorial = {
-                    // No hay una pantalla de historial docente
-                    // confirmada para conectar aquí.
+                    navController.navigate("docente_historial")
                 },
 
                 onInforme = {
@@ -265,8 +291,7 @@ fun Navegacion() {
                 },
 
                 onRecordatorios = {
-                    // Pendiente de conectar con la pantalla
-                    // de recordatorios.
+                    navController.navigate("docente_recordatorios")
                 },
 
                 onCerrarSesion = {
@@ -282,23 +307,46 @@ fun Navegacion() {
         composable("docente_bitacoras") {
             DocenteBitacorasScreen(
                 titulo = "Bitácoras mensuales",
-                bitacoras = bitacoras,
-
-                onVolver = {
-                    navController.popBackStack()
-                },
-
-                onPublicar = { id ->
-                    // Pendiente: guardar el cambio de estado.
-                },
-
-                onCerrar = { id ->
-                    // Pendiente: guardar el cambio de estado.
-                },
-
+                bitacoras = bitacorasDocente,
+                onVolver = { navController.popBackStack() },
+                onPublicar = { id -> viewModel.publicarBitacora(id) },
+                onCerrar = { id -> viewModel.cerrarBitacora(id) },
                 onVerAportes = { id ->
-                    // Pendiente de conectar con la pantalla
-                    // de aportes de la bitácora seleccionada.
+                    viewModel.bitacoraAportes = id
+                    navController.navigate("docente_aportes")
+                }
+            )
+        }
+
+        // APORTES DEL DOCENTE
+        composable("docente_aportes") {
+            DocenteAportesScreen(
+                titulo = "Aportes de estudiantes",
+                registros = registros.filter { it.bitacoraId == viewModel.bitacoraAportes },
+                bitacoras = bitacoras,
+                estadoInicial = "todos",
+                onVolver = { navController.popBackStack() },
+                onAbrir = { registroId ->
+                    viewModel.registroSeleccionado = registroId
+                    navController.navigate("docente_revision")
+                }
+            )
+        }
+
+        // REVISIÓN DE UN APORTE
+        composable("docente_revision") {
+            val registro = registros.firstOrNull { it.id == viewModel.registroSeleccionado }
+            val bitacora = bitacoras.firstOrNull { it.id == registro?.bitacoraId }
+
+            DocenteRevisionScreen(
+                registro = registro,
+                bitacora = bitacora,
+                onVolver = { navController.popBackStack() },
+                onGuardarComentario = { id, comentario ->
+                    viewModel.guardarComentario(id, comentario)
+                },
+                onMarcarRevisado = { id ->
+                    viewModel.marcarRevisado(id)
                 }
             )
         }
@@ -322,50 +370,103 @@ fun Navegacion() {
 
         // SEGUIMIENTO DE PARTICIPACIÓN
         composable("docente_participacion") {
+            var seleccionada by remember { mutableStateOf(0) }
             DocenteParticipacionScreen(
-                bitacoras = emptyList(),
-                registros = emptyList(),
-                seleccionada = 0,
-                modo = "seguimiento",
-                onSeleccionar = { indice ->
-                    // Pendiente: conectar con los datos reales.
+                bitacoras = bitacorasDocente.filter {
+                    it.estado == "publicada" || it.estado == "cerrada"
                 },
-                onVolver = {
-                    navController.popBackStack()
-                }
+                registros = registrosDocente,
+                seleccionada = seleccionada,
+                modo = "seguimiento",
+                onSeleccionar = { seleccionada = it },
+                onVolver = { navController.popBackStack() }
             )
         }
 
         // INDICADORES
         composable("docente_indicadores") {
+            var seleccionada by remember { mutableStateOf(0) }
             DocenteParticipacionScreen(
-                bitacoras = emptyList(),
-                registros = emptyList(),
-                seleccionada = 0,
-                modo = "indicadores",
-                onSeleccionar = { indice ->
-                    // Pendiente: conectar con los datos reales.
+                bitacoras = bitacorasDocente.filter {
+                    it.estado == "publicada" || it.estado == "cerrada"
                 },
-                onVolver = {
-                    navController.popBackStack()
-                }
+                registros = registrosDocente,
+                seleccionada = seleccionada,
+                modo = "indicadores",
+                onSeleccionar = { seleccionada = it },
+                onVolver = { navController.popBackStack() }
             )
         }
 
         // INFORME
         composable("docente_informe") {
+            var seleccionada by remember { mutableStateOf(0) }
             DocenteParticipacionScreen(
-                bitacoras = emptyList(),
-                registros = emptyList(),
-                seleccionada = 0,
-                modo = "informe",
-                onSeleccionar = { indice ->
-                    // Pendiente: conectar con los datos reales.
+                bitacoras = bitacorasDocente.filter {
+                    it.estado == "publicada" || it.estado == "cerrada"
                 },
-                onVolver = {
-                    navController.popBackStack()
+                registros = registrosDocente,
+                seleccionada = seleccionada,
+                modo = "informe",
+                onSeleccionar = { seleccionada = it },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        // APORTES DESDE EL MENÚ (todos o solo pendientes)
+        composable(
+            route = "docente_aportes_general/{estadoInicial}",
+            arguments = listOf(navArgument("estadoInicial") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val estadoInicial = backStackEntry.arguments?.getString("estadoInicial") ?: "todos"
+            DocenteAportesScreen(
+                titulo = if (estadoInicial == "pendiente")
+                    "Aportes pendientes de revisión"
+                else
+                    "Aportes de estudiantes",
+                registros = registrosDocente,
+                bitacoras = bitacoras,
+                estadoInicial = estadoInicial,
+                onVolver = { navController.popBackStack() },
+                onAbrir = { registroId ->
+                    viewModel.registroSeleccionado = registroId
+                    navController.navigate("docente_revision")
                 }
             )
         }
+
+        // HISTORIAL DE BITÁCORAS (las cerradas)
+        composable("docente_historial") {
+            DocenteBitacorasScreen(
+                titulo = "Historial de bitácoras",
+                bitacoras = bitacorasDocente.filter { it.estado == "cerrada" },
+                onVolver = { navController.popBackStack() },
+                onPublicar = { },
+                onCerrar = { },
+                onVerAportes = { id ->
+                    viewModel.bitacoraAportes = id
+                    navController.navigate("docente_aportes")
+                }
+            )
+        }
+
+        // RECORDATORIOS INTERNOS
+        composable("docente_recordatorios") {
+            DocenteRecordatoriosScreen(
+                recordatorios = recordatorios.filter {
+                    it.docente == viewModel.usuarioActual
+                },
+                onVolver = {
+                    navController.popBackStack()
+                },
+                onCrear = { tipo, fecha ->
+                    viewModel.crearRecordatorio(tipo, fecha)
+                },
+                onCompletar = { id ->
+                    viewModel.completarRecordatorio(id)
+                }
+            )
+        }
+
     }
 }

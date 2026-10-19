@@ -52,3 +52,4 @@ data class Recordatorio(
     val fechaProgramada: String,
     val estado: String
 )
+

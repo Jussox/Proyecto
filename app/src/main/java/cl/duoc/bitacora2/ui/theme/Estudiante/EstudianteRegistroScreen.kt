@@ -2,6 +2,7 @@ package cl.duoc.bitacora2.ui.theme.Estudiante
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import cl.duoc.bitacora2.data.Registro
 import cl.duoc.bitacora2.data.fechaHoy
 import cl.duoc.bitacora2.data.Bitacora
@@ -33,7 +34,7 @@ fun EstudianteRegistroScreen(
     var dudas by remember(registroExistente?.id) {
         mutableStateOf(registroExistente?.dudas ?: "")
     }
-    var fotografias by remember(registroExistente?.id) {
+    var fotografias by rememberSaveable(registroExistente?.id) {
         mutableStateOf(registroExistente?.fotografias ?: "")
     }
     var archivos by remember(registroExistente?.id) {
@@ -48,6 +49,8 @@ fun EstudianteRegistroScreen(
     var mensajeEsError by remember {
         mutableStateOf(false)
     }
+
+
 
     fun fechaValida(fecha: String): Boolean {
         return try {
@@ -107,9 +110,30 @@ fun EstudianteRegistroScreen(
             item { Campo(actividad, "Actividad realizada") { actividad = it } }
             item { Campo(aprendizaje, "Qué aprendió") { aprendizaje = it } }
             item { Campo(dudas, "Dudas o dificultades") { dudas = it } }
-            item { Campo(fotografias, "Fotografías (nombre o descripción de la evidencia)") { fotografias = it } }
+
+            item {
+                Text("Adjuntos", style = MaterialTheme.typography.titleMedium)
+            }
+            item {
+                AdjuntosSection(
+                    uriFoto = fotografias,
+                    enlace = enlaces,
+                    onFotoCambio = { fotografias = it },
+                    onEnlaceCambio = { enlaces = it }
+                )
+            }
+
             item { Campo(archivos, "Archivos adjuntos (nombre del archivo)") { archivos = it } }
-            item { Campo(enlaces, "Enlaces relacionados") { enlaces = it } }
+
+            if (mensaje.isNotEmpty()) {
+                item {
+                    Text(
+                        text = mensaje,
+                        color = if (mensajeEsError) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
 
             if (mensaje.isNotEmpty()) {
                 item {
