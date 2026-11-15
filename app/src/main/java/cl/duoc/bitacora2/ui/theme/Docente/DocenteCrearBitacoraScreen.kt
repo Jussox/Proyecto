@@ -5,86 +5,45 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import cl.duoc.bitacora2.data.Asignacion
 import cl.duoc.bitacora2.data.Bitacora
-import cl.duoc.bitacora2.data.fechaHoy
 import cl.duoc.bitacora2.ui.theme.comun.*
+
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun DocenteCrearBitacoraScreen(
     asignaciones: List<Asignacion>,
     docente: String,
     onVolver: () -> Unit,
-    onGuardar: (Bitacora) -> Unit
+    onGuardar: (Bitacora) -> Unit,
+    viewModel: DocenteCrearBitacoraViewModel = viewModel()
 ) {
-    var seleccionada by remember { mutableStateOf<Asignacion?>(null) }
-    var mes by remember { mutableStateOf("") }
-    var anio by remember { mutableStateOf("") }
-    var titulo by remember { mutableStateOf("") }
-    var proposito by remember { mutableStateOf("") }
-    var instrucciones by remember { mutableStateOf("") }
-    var preguntas by remember { mutableStateOf("") }
-    var mensaje by remember { mutableStateOf("") }
-    var mensajeEsError by remember { mutableStateOf(false) }
-
-    fun guardar(publicar: Boolean) {
-        val a = seleccionada
-        if (a == null || mes.isBlank() || anio.isBlank() || titulo.isBlank() ||
-            proposito.isBlank() || instrucciones.isBlank() || preguntas.isBlank()
-        ) {
-            mensaje = "Seleccione curso y asignatura y complete todos los campos"
-            mensajeEsError = true
-        } else {
-            onGuardar(
-                Bitacora(
-                    docente = docente,
-                    curso = a.curso,
-                    asignatura = a.asignatura,
-                    mes = mes,
-                    anio = anio,
-                    titulo = titulo,
-                    proposito = proposito,
-                    instrucciones = instrucciones,
-                    preguntas = preguntas,
-                    estado = if (publicar) "publicada" else "guardada",
-                    fechaPublicacion = if (publicar) fechaHoy() else ""
-                )
-            )
-            seleccionada = null
-            mes = ""
-            anio = ""
-            titulo = ""
-            proposito = ""
-            instrucciones = ""
-            preguntas = ""
-            mensaje = if (publicar) "Bitácora guardada y publicada."
-            else "Bitácora guardada. Puedes publicarla desde «Mis bitácoras mensuales»."
-            mensajeEsError = false
-        }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     PantallaBase(titulo = "Crear bitácora", onVolver = onVolver) {
         item { Text("Curso y asignatura", style = MaterialTheme.typography.titleMedium) }
         items(asignaciones) { a ->
-            BotonOpcion("${a.curso} · ${a.asignatura}", seleccionada == a) { seleccionada = a }
+            BotonOpcion("${a.curso} · ${a.asignatura}", uiState.seleccionada == a) { viewModel.seleccionarAsignacion(a) }
         }
-        item { Campo(mes, "Mes (por ejemplo: Octubre)") { mes = it } }
-        item { Campo(anio, "Año (por ejemplo: 2026)") { anio = it } }
-        item { Campo(titulo, "Título de la bitácora") { titulo = it } }
-        item { Campo(proposito, "Propósito general") { proposito = it } }
-        item { Campo(instrucciones, "Instrucciones para los estudiantes") { instrucciones = it } }
-        item { Campo(preguntas, "Preguntas orientadoras") { preguntas = it } }
+        item { Campo(uiState.mes, "Mes (por ejemplo: Octubre)") { viewModel.cambiarMes(it) } }
+        item { Campo(uiState.anio, "Año (por ejemplo: 2026)") { viewModel.cambiarAnio(it) } }
+        item { Campo(uiState.titulo, "Título de la bitácora") { viewModel.cambiarTitulo(it) } }
+        item { Campo(uiState.proposito, "Propósito general") { viewModel.cambiarProposito(it) } }
+        item { Campo(uiState.instrucciones, "Instrucciones para los estudiantes") { viewModel.cambiarInstrucciones(it) } }
+        item { Campo(uiState.preguntas, "Preguntas orientadoras") { viewModel.cambiarPreguntas(it) } }
 
-        if (mensaje.isNotEmpty()) {
+        if (uiState.mensaje.isNotEmpty()) {
             item {
                 Text(
-                    text = mensaje,
-                    color = if (mensajeEsError) MaterialTheme.colorScheme.error
+                    text = uiState.mensaje,
+                    color = if (uiState.mensajeEsError) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        item { BotonSecundario("Guardar") { guardar(false) } }
-        item { BotonAncho("Guardar y publicar bitácora") { guardar(true) } }
+        item { BotonSecundario("Guardar") { viewModel.guardar(docente, false, onGuardar) } }
+        item { BotonAncho("Guardar y publicar bitácora") { viewModel.guardar(docente, true, onGuardar) } }
         item { BotonSecundario("Volver / cancelar") { onVolver() } }
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cl.duoc.bitacora2.data.Bitacora
@@ -30,16 +31,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 
 import androidx.compose.material3.CardDefaults
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 
 //para el boton de cerrar sesion
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.graphics.Color
+
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun DocenteScreen(
@@ -56,19 +56,10 @@ fun DocenteScreen(
     onHistorial: () -> Unit,
     onInforme: () -> Unit,
     onRecordatorios: () -> Unit,
-    onCerrarSesion: () -> Unit
+    onCerrarSesion: () -> Unit,
+    viewModel: DocenteViewModel = viewModel()
 ) {
-    var administracionExpandida by remember {
-        mutableStateOf(false)
-    }
-
-    var revisionExpandida by remember {
-        mutableStateOf(false)
-    }
-
-    var seguimientoExpandido by remember {
-        mutableStateOf(false)
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     PantallaBase(titulo = "Bitácora") {
 
@@ -99,8 +90,7 @@ fun DocenteScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            administracionExpandida =
-                                !administracionExpandida
+                            viewModel.toggleAdministracion()
                         },
                     colors = CardDefaults.cardColors(
                         containerColor =
@@ -121,7 +111,7 @@ fun DocenteScreen(
                         )
 
                         Text(
-                            text = if (administracionExpandida) "▲" else "▼",
+                            text = if (uiState.administracionExpandida) "▲" else "▼",
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
@@ -129,7 +119,7 @@ fun DocenteScreen(
 
                 // Las opciones aparecen y desaparecen suavemente.
                 AnimatedVisibility(
-                    visible = administracionExpandida,
+                    visible = uiState.administracionExpandida,
                     enter = fadeIn(
                         animationSpec = tween(250)
                     ) + expandVertically(
@@ -173,7 +163,7 @@ fun DocenteScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            revisionExpandida = !revisionExpandida
+                            viewModel.toggleRevision()
                         },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -192,14 +182,14 @@ fun DocenteScreen(
                         )
 
                         Text(
-                            text = if (revisionExpandida) "▲" else "▼",
+                            text = if (uiState.revisionExpandida) "▲" else "▼",
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
 
                 AnimatedVisibility(
-                    visible = revisionExpandida,
+                    visible = uiState.revisionExpandida,
                     enter = fadeIn(animationSpec = tween(250)) +
                             expandVertically(animationSpec = tween(300)),
                     exit = fadeOut(animationSpec = tween(200)) +
@@ -228,7 +218,7 @@ fun DocenteScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            seguimientoExpandido = !seguimientoExpandido
+                            viewModel.toggleSeguimiento()
                         },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -247,14 +237,14 @@ fun DocenteScreen(
                         )
 
                         Text(
-                            text = if (seguimientoExpandido) "▲" else "▼",
+                            text = if (uiState.seguimientoExpandido) "▲" else "▼",
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
 
                 AnimatedVisibility(
-                    visible = seguimientoExpandido,
+                    visible = uiState.seguimientoExpandido,
                     enter = fadeIn(animationSpec = tween(250)) +
                             expandVertically(animationSpec = tween(300)),
                     exit = fadeOut(animationSpec = tween(200)) +

@@ -15,9 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -30,6 +27,9 @@ import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 import cl.duoc.bitacora2.ui.theme.comun.colorEstado
 
 import cl.duoc.bitacora2.data.Registro
+
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 @Composable
@@ -134,11 +134,10 @@ fun EstudianteHistorialScreen(
     bitacoras: List<Bitacora>,
     onVolver: () -> Unit,
     onEditar: (Registro) -> Unit,
-    onEliminar: (Int) -> Unit
+    onEliminar: (Int) -> Unit,
+    viewModel: EstudianteHistorialViewModel = viewModel()
 ) {
-    var idPendienteEliminar by remember {
-        mutableStateOf<Int?>(null)
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     PantallaBase(
         titulo = "Mis registros e historial",
@@ -175,7 +174,7 @@ fun EstudianteHistorialScreen(
                     }
 
                     BotonSecundario("Eliminarlo") {
-                        idPendienteEliminar = registro.id
+                        viewModel.mostrarDialogoEliminar(registro.id)
                     }
                 }
             }
@@ -183,10 +182,10 @@ fun EstudianteHistorialScreen(
     }
 
     // El diálogo queda fuera de PantallaBase.
-    if (idPendienteEliminar != null) {
+    if (uiState.idPendienteEliminar != null) {
         AlertDialog(
             onDismissRequest = {
-                idPendienteEliminar = null
+                viewModel.ocultarDialogoEliminar()
             },
             title = {
                 Text("Eliminar registro")
@@ -197,11 +196,7 @@ fun EstudianteHistorialScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val id = idPendienteEliminar
-                        if (id != null) {
-                            onEliminar(id)
-                        }
-                        idPendienteEliminar = null
+                        viewModel.confirmarEliminar(onEliminar)
                     }
                 ) {
                     Text("Eliminar")
@@ -210,7 +205,7 @@ fun EstudianteHistorialScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        idPendienteEliminar = null
+                        viewModel.ocultarDialogoEliminar()
                     }
                 ) {
                     Text("Cancelar")

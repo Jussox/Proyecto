@@ -13,10 +13,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -33,6 +31,9 @@ import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 import cl.duoc.bitacora2.ui.theme.comun.nombreEstado
 import coil3.compose.AsyncImage
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 @Composable
 fun DocenteAportesScreen(
     titulo: String,
@@ -40,32 +41,35 @@ fun DocenteAportesScreen(
     bitacoras: List<Bitacora>,
     estadoInicial: String,
     onVolver: () -> Unit,
-    onAbrir: (Int) -> Unit
+    onAbrir: (Int) -> Unit,
+    viewModel: DocenteAportesViewModel = viewModel()
 ) {
-    var filtroEstudiante by remember { mutableStateOf("") }
-    var filtroFecha by remember { mutableStateOf("") }
-    var filtroEstado by remember(estadoInicial) { mutableStateOf(estadoInicial) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(estadoInicial) {
+        viewModel.inicializarFiltroEstado(estadoInicial)
+    }
 
     val filtrados = registros.filter { r ->
-        (filtroEstudiante.isBlank() ||
-                r.estudiante.contains(filtroEstudiante, ignoreCase = true) ||
-                DatosPrueba.nombreDe(r.estudiante).contains(filtroEstudiante, ignoreCase = true)) &&
-                (filtroFecha.isBlank() || r.fechaClase.contains(filtroFecha)) &&
-                (filtroEstado == "todos" || r.estado == filtroEstado)
+        (uiState.filtroEstudiante.isBlank() ||
+                r.estudiante.contains(uiState.filtroEstudiante, ignoreCase = true) ||
+                DatosPrueba.nombreDe(r.estudiante).contains(uiState.filtroEstudiante, ignoreCase = true)) &&
+                (uiState.filtroFecha.isBlank() || r.fechaClase.contains(uiState.filtroFecha)) &&
+                (uiState.filtroEstado == "todos" || r.estado == uiState.filtroEstado)
     }.sortedByDescending { it.id }
 
     PantallaBase(titulo = titulo, onVolver = onVolver) {
         item { Text("Filtros", style = MaterialTheme.typography.titleMedium) }
-        item { Campo(filtroEstudiante, "Estudiante (nombre o usuario)") { filtroEstudiante = it } }
-        item { Campo(filtroFecha, "Fecha de la clase (dd/mm/aaaa)") { filtroFecha = it } }
+        item { Campo(uiState.filtroEstudiante, "Estudiante (nombre o usuario)") { viewModel.cambiarFiltroEstudiante(it) } }
+        item { Campo(uiState.filtroFecha, "Fecha de la clase (dd/mm/aaaa)") { viewModel.cambiarFiltroFecha(it) } }
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                BotonOpcion("Todos", filtroEstado == "todos", Modifier.weight(1f)) { filtroEstado = "todos" }
-                BotonOpcion("Pendientes", filtroEstado == "pendiente", Modifier.weight(1f)) { filtroEstado = "pendiente" }
-                BotonOpcion("Revisados", filtroEstado == "revisado", Modifier.weight(1f)) { filtroEstado = "revisado" }
+                BotonOpcion("Todos", uiState.filtroEstado == "todos", Modifier.weight(1f)) { viewModel.cambiarFiltroEstado("todos") }
+                BotonOpcion("Pendientes", uiState.filtroEstado == "pendiente", Modifier.weight(1f)) { viewModel.cambiarFiltroEstado("pendiente") }
+                BotonOpcion("Revisados", uiState.filtroEstado == "revisado", Modifier.weight(1f)) { viewModel.cambiarFiltroEstado("revisado") }
             }
         }
         item { Text("Aportes encontrados: ${filtrados.size}") }
@@ -93,10 +97,14 @@ fun DocenteRevisionScreen(
     bitacora: Bitacora?,
     onVolver: () -> Unit,
     onGuardarComentario: (Int, String) -> Unit,
-    onMarcarRevisado: (Int) -> Unit
+    onMarcarRevisado: (Int) -> Unit,
+    viewModel: DocenteRevisionViewModel = viewModel()
 ) {
-    var comentario by remember(registro?.id) { mutableStateOf(registro?.comentario ?: "") }
-    var mensaje by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(registro?.id) {
+        viewModel.inicializarComentario(registro?.comentario ?: "")
+    }
 
     PantallaBase(titulo = "Revisión de aporte", onVolver = onVolver) {
         if (registro == null) {
@@ -129,14 +137,11 @@ fun DocenteRevisionScreen(
             item { Dato("Enlaces relacionados", registro.enlaces) }
             item { Dato("Estado", nombreEstado(registro.estado)) }
             item { Text("Retroalimentación", style = MaterialTheme.typography.titleMedium) }
-            item { Campo(comentario, "Comentario de retroalimentación") { comentario = it } }
+            item { Campo(uiState.comentario, "Comentario de retroalimentación") { viewModel.cambiarComentario(it) } }
             item {
                 BotonSecundario("Guardar comentario") {
-                    if (comentario.isBlank()) {
-                        mensaje = "Escriba un comentario antes de guardar"
-                    } else {
-                        onGuardarComentario(registro.id, comentario)
-                        mensaje = "Comentario guardado"
+                    viewModel.guardarComentario(registro.id, bitacora?.docente ?: "") { id, c ->
+                        onGuardarComentario(id, c)
                     }
                 }
             }
@@ -145,13 +150,14 @@ fun DocenteRevisionScreen(
             } else {
                 item {
                     BotonAncho("Marcar como revisado") {
-                        onMarcarRevisado(registro.id)
-                        mensaje = "Aporte marcado como revisado"
+                        viewModel.marcarRevisado(registro.id) { id ->
+                            onMarcarRevisado(id)
+                        }
                     }
                 }
             }
-            if (mensaje.isNotEmpty()) {
-                item { Text(mensaje, color = MaterialTheme.colorScheme.primary) }
+            if (uiState.mensaje.isNotEmpty()) {
+                item { Text(uiState.mensaje, color = MaterialTheme.colorScheme.primary) }
             }
         }
     }
