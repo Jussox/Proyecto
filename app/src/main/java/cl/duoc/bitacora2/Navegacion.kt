@@ -38,6 +38,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
 
 import cl.duoc.bitacora2.ui.theme.login.LoginScreen
+import cl.duoc.bitacora2.util.Sesion
 
 @Composable
 fun Navegacion() {
@@ -50,7 +51,7 @@ fun Navegacion() {
 
     val recordatorios by viewModel.recordatorios.collectAsState()
 
-    val bitacorasDocente = bitacoras.filter { it.docente == viewModel.usuarioActual }
+    val bitacorasDocente = bitacoras.filter { it.docente == Sesion.usuario }
     val registrosDocente = registros.filter { r ->
         bitacorasDocente.any { it.id == r.bitacoraId }
     }
@@ -103,22 +104,16 @@ fun Navegacion() {
         // INICIO DE SESIÓN
            composable("login") {
                LoginScreen(
-                   onIrAEstudiante = { usuario ->
-                       viewModel.usuarioActual = usuario
-                       navController.navigate("estudiante")
-                   },
-                   onIrADocente = { usuario ->
-                       viewModel.usuarioActual = usuario
-                       navController.navigate("docente")
-                   }
+                   onIrAEstudiante = { navController.navigate("estudiante") },
+                   onIrADocente = { navController.navigate("docente") }
                )
            }
 
            // MENÚ ESTUDIANTE
            composable("estudiante") {
                EstudianteScreen(
-                   nombre = DatosPrueba.nombreDe(viewModel.usuarioActual),
-                   curso = DatosPrueba.cursoDe(viewModel.usuarioActual),
+                   nombre = DatosPrueba.nombreDe(Sesion.usuario),
+                   curso = DatosPrueba.cursoDe(Sesion.usuario),
 
                    onCursos = {
                        navController.navigate("EstudianteBitacoraScreen")
@@ -147,7 +142,7 @@ fun Navegacion() {
                    titulo = "Mis cursos y asignaturas",
                    //muestra solo las que están publicadas para el curso del estudiante
                    bitacoras = bitacoras.filter {
-                       it.curso == DatosPrueba.cursoDe(viewModel.usuarioActual) &&
+                       it.curso == DatosPrueba.cursoDe(Sesion.usuario) &&
                                it.estado == "publicada"
                    },
                    onVolver = {
@@ -207,7 +202,7 @@ fun Navegacion() {
 
                EstudianteRegistroScreen(
                    bitacora = bitacoraSeleccionada,
-                   estudiante = viewModel.usuarioActual,
+                   estudiante = Sesion.usuario,
                    onVolver = {
                        navController.popBackStack()
                    },
@@ -221,7 +216,7 @@ fun Navegacion() {
            composable("estudiante_historial") {
                EstudianteHistorialScreen(
                    registros = registros.filter {
-                       it.estudiante == viewModel.usuarioActual
+                       it.estudiante == Sesion.usuario
                    },
                    bitacoras = bitacoras,
                    onVolver = {
@@ -241,7 +236,7 @@ fun Navegacion() {
            // RETROALIMENTACIÓN DEL ESTUDIANTE
            composable("estudiante_retroalimentacion") {
                EstudianteRetroalimentacionScreen(
-                   registros = registros.filter { it.estudiante == viewModel.usuarioActual },
+                   registros = registros.filter { it.estudiante == Sesion.usuario },
                    bitacoras = bitacoras,
                    onVolver = { navController.popBackStack() }
                )
@@ -261,7 +256,7 @@ fun Navegacion() {
 
                val registroExistente = registros.firstOrNull {
                    it.id == registroId &&
-                           it.estudiante == viewModel.usuarioActual
+                           it.estudiante == Sesion.usuario
                }
 
                val bitacoraDelRegistro = bitacoras.firstOrNull {
@@ -270,7 +265,7 @@ fun Navegacion() {
 
                EstudianteRegistroScreen(
                    bitacora = bitacoraDelRegistro,
-                   estudiante = viewModel.usuarioActual,
+                   estudiante = Sesion.usuario,
                    registroExistente = registroExistente,
                    onVolver = {
                        navController.popBackStack()
@@ -291,10 +286,10 @@ fun Navegacion() {
            // MENÚ DOCENTE
            composable("docente") {
                DocenteScreen(
-                   nombre = DatosPrueba.nombreDe(viewModel.usuarioActual),
+                   nombre = DatosPrueba.nombreDe(Sesion.usuario),
                    aportesPendientes = registrosDocente.count { it.estado == "pendiente" },
                    recordatoriosPendientes = recordatorios.count {
-                       it.docente == viewModel.usuarioActual && it.estado == "pendiente"
+                       it.docente == Sesion.usuario && it.estado == "pendiente"
                    },
 
                    onCursos = {
@@ -355,52 +350,63 @@ fun Navegacion() {
                    onPublicar = { id -> viewModel.publicarBitacora(id) },
                    onCerrar = { id -> viewModel.cerrarBitacora(id) },
                    onVerAportes = { id ->
-                       viewModel.bitacoraAportes = id
-                       navController.navigate("docente_aportes")
+                       navController.navigate("docente_aportes/$id")
                    }
                )
            }
 
            // APORTES DEL DOCENTE
-           composable("docente_aportes") {
-               DocenteAportesScreen(
-                   titulo = "Aportes de estudiantes",
-                   registros = registros.filter { it.bitacoraId == viewModel.bitacoraAportes },
-                   bitacoras = bitacoras,
-                   estadoInicial = "todos",
-                   onVolver = { navController.popBackStack() },
-                   onAbrir = { registroId ->
-                       viewModel.registroSeleccionado = registroId
-                       navController.navigate("docente_revision")
-                   }
-               )
-           }
+           composable(
+                route = "docente_aportes/{bitacoraId}",
+                arguments = listOf(
+                    navArgument("bitacoraId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+                val bitacoraId = backStackEntry.arguments?.getInt("bitacoraId") ?: 0
+                DocenteAportesScreen(
+                    titulo = "Aportes de estudiantes",
+                    registros = registros.filter { it.bitacoraId == bitacoraId },
+                    bitacoras = bitacoras,
+                    estadoInicial = "todos",
+                    onVolver = { navController.popBackStack() },
+                    onAbrir = { registroId ->
+                        navController.navigate("docente_revision/$registroId")
+                    }
+                )
+            }
 
            // REVISIÓN DE UN APORTE
-           composable("docente_revision") {
-               val registro = registros.firstOrNull { it.id == viewModel.registroSeleccionado }
-               val bitacora = bitacoras.firstOrNull { it.id == registro?.bitacoraId }
+           composable(
+                route = "docente_revision/{registroId}",
+                arguments = listOf(
+                    navArgument("registroId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+                val registroId = backStackEntry.arguments?.getInt("registroId") ?: 0
+                val registro = registros.firstOrNull { it.id == registroId }
+                val bitacora = bitacoras.firstOrNull { it.id == registro?.bitacoraId }
 
-               DocenteRevisionScreen(
-                   registro = registro,
-                   bitacora = bitacora,
-                   onVolver = { navController.popBackStack() },
-                   onGuardarComentario = { id, comentario ->
-                       viewModel.guardarComentario(id, comentario)
-                   },
-                   onMarcarRevisado = { id ->
-                       viewModel.marcarRevisado(id)
-                   }
-               )
-           }
+                DocenteRevisionScreen(
+                    registro = registro,
+                    bitacora = bitacora,
+                    onVolver = { navController.popBackStack() },
+                    onGuardarComentario = { id, comentario ->
+                        viewModel.guardarComentario(id, comentario)
+                    },
+                    onMarcarRevisado = { id ->
+                        viewModel.marcarRevisado(id)
+                    }
+                )
+            }
 
            // CREAR BITÁCORA
            composable("docente_crear_bitacora") {
                DocenteCrearBitacoraScreen(
-                   asignaciones = DatosPrueba.asignacionesDeDocente(
-                       viewModel.usuarioActual
-                   ),
-                   docente = viewModel.usuarioActual,
+                   asignaciones = DatosPrueba.asignacionesDeDocente(Sesion.usuario), docente = Sesion.usuario,
                    onVolver = {
                        navController.popBackStack()
                    },
@@ -411,50 +417,29 @@ fun Navegacion() {
                )
            }
 
-           // SEGUIMIENTO DE PARTICIPACIÓN
-           composable("docente_participacion") {
-               var seleccionada by remember { mutableStateOf(0) }
-               DocenteParticipacionScreen(
-                   bitacoras = bitacorasDocente.filter {
-                       it.estado == "publicada" || it.estado == "cerrada"
-                   },
-                   registros = registrosDocente,
-                   seleccionada = seleccionada,
-                   modo = "seguimiento",
-                   onSeleccionar = { seleccionada = it },
-                   onVolver = { navController.popBackStack() }
-               )
-           }
+            // SEGUIMIENTO DE PARTICIPACIÓN
+            composable("docente_participacion") {
+                DocenteParticipacionScreen(
+                    modo = "seguimiento",
+                    onVolver = { navController.popBackStack() }
+                )
+            }
 
-           // INDICADORES
-           composable("docente_indicadores") {
-               var seleccionada by remember { mutableStateOf(0) }
-               DocenteParticipacionScreen(
-                   bitacoras = bitacorasDocente.filter {
-                       it.estado == "publicada" || it.estado == "cerrada"
-                   },
-                   registros = registrosDocente,
-                   seleccionada = seleccionada,
-                   modo = "indicadores",
-                   onSeleccionar = { seleccionada = it },
-                   onVolver = { navController.popBackStack() }
-               )
-           }
+            // INDICADORES
+            composable("docente_indicadores") {
+                DocenteParticipacionScreen(
+                    modo = "indicadores",
+                    onVolver = { navController.popBackStack() }
+                )
+            }
 
-           // INFORME
-           composable("docente_informe") {
-               var seleccionada by remember { mutableStateOf(0) }
-               DocenteParticipacionScreen(
-                   bitacoras = bitacorasDocente.filter {
-                       it.estado == "publicada" || it.estado == "cerrada"
-                   },
-                   registros = registrosDocente,
-                   seleccionada = seleccionada,
-                   modo = "informe",
-                   onSeleccionar = { seleccionada = it },
-                   onVolver = { navController.popBackStack() }
-               )
-           }
+            // INFORME
+            composable("docente_informe") {
+                DocenteParticipacionScreen(
+                    modo = "informe",
+                    onVolver = { navController.popBackStack() }
+                )
+            }
 
            // APORTES DESDE EL MENÚ (todos o solo pendientes)
            composable(
@@ -471,10 +456,7 @@ fun Navegacion() {
                    bitacoras = bitacoras,
                    estadoInicial = estadoInicial,
                    onVolver = { navController.popBackStack() },
-                   onAbrir = { registroId ->
-                       viewModel.registroSeleccionado = registroId
-                       navController.navigate("docente_revision")
-                   }
+                   onAbrir = { registroId -> navController.navigate("docente_revision/$registroId") }
                )
            }
 
@@ -487,8 +469,7 @@ fun Navegacion() {
                    onPublicar = { },
                    onCerrar = { },
                    onVerAportes = { id ->
-                       viewModel.bitacoraAportes = id
-                       navController.navigate("docente_aportes")
+                       navController.navigate("docente_aportes/$id")
                    }
                )
            }
@@ -497,7 +478,7 @@ fun Navegacion() {
            composable("docente_recordatorios") {
                DocenteRecordatoriosScreen(
                    recordatorios = recordatorios.filter {
-                       it.docente == viewModel.usuarioActual
+                       it.docente == Sesion.usuario
                    },
                    onVolver = {
                        navController.popBackStack()

@@ -2,6 +2,7 @@ package cl.duoc.bitacora2.ui.theme.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cl.duoc.bitacora2.util.Sesion
 import cl.duoc.bitacora2.util.credencialesCorrectas
 import cl.duoc.bitacora2.util.validarPasswordLogin
 import cl.duoc.bitacora2.util.validarUsuario
@@ -95,6 +96,8 @@ class LoginViewModel : ViewModel() {
             // Guardamos el usuario autenticado.
             val usuarioAutenticado = estado.usuario
             val perfilAutenticado = estado.perfil
+
+            Sesion.iniciar(usuarioAutenticado, perfilAutenticado)
 
             // Limpiamos el estado del formulario.
             _uiState.value = LoginUiState()

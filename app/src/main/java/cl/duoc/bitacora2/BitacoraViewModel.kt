@@ -9,10 +9,10 @@ import androidx.lifecycle.viewModelScope
 import cl.duoc.bitacora2.data.Recordatorio
 import cl.duoc.bitacora2.data.Registro
 import cl.duoc.bitacora2.data.fechaHoy
-import cl.duoc.bitacora2.data.Asignacion
 import cl.duoc.bitacora2.data.Bitacora
 import cl.duoc.bitacora2.data.BitacoraDatabase
 import cl.duoc.bitacora2.data.BitacoraRepository
+import cl.duoc.bitacora2.util.Sesion
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -24,17 +24,6 @@ class BitacoraViewModel(
 
     private val database = BitacoraDatabase.getInstance(application)
     private val repository = BitacoraRepository(database.bitacoraDao())
-
-    // Sesión y selección actual
-    var usuarioActual by mutableStateOf("")
-    var bitacoraSeleccionada by mutableStateOf(0)
-    var registroSeleccionado by mutableStateOf(0)
-    var asignacionFiltro by mutableStateOf<Asignacion?>(null)
-    var soloRetroalimentacion by mutableStateOf(false)
-    var soloHistorialBitacoras by mutableStateOf(false)
-    var estadoAportes by mutableStateOf("todos")
-    var bitacoraAportes by mutableStateOf(0)
-    var modoParticipacion by mutableStateOf("seguimiento")
 
     // Datos
     val bitacoras: StateFlow<List<Bitacora>> =
@@ -99,7 +88,7 @@ class BitacoraViewModel(
 
     fun guardarComentario(id: Int, comentario: String) {
         viewModelScope.launch {
-            repository.guardarComentario(id, comentario, fechaHoy(), usuarioActual)
+            repository.guardarComentario(id, comentario, fechaHoy(), Sesion.usuario)
         }
     }
 
@@ -113,7 +102,7 @@ class BitacoraViewModel(
         viewModelScope.launch {
             repository.guardarRecordatorio(
                 Recordatorio(
-                    docente = usuarioActual,
+                    docente = Sesion.usuario,
                     tipo = tipo,
                     fechaProgramada = fecha,
                     estado = "pendiente"

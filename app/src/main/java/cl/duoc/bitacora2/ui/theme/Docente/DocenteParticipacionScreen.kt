@@ -3,44 +3,43 @@ package cl.duoc.bitacora2.ui.theme.Docente
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import cl.duoc.bitacora2.data.Bitacora
-import cl.duoc.bitacora2.data.DatosPrueba
-import cl.duoc.bitacora2.data.Registro
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.bitacora2.data.fechaHoy
 import cl.duoc.bitacora2.ui.theme.comun.*
 
 @Composable
 fun DocenteParticipacionScreen(
     modo: String,
-    bitacoras: List<Bitacora>,
-    registros: List<Registro>,
-    seleccionada: Int,
-    onSeleccionar: (Int) -> Unit,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    viewModel: DocenteParticipacionViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val titulo = if (modo == "indicadores") "Indicadores generales"
     else if (modo == "informe") "Informe mensual"
     else "Seguimiento de participación"
-    val bitacora = bitacoras.firstOrNull { it.id == seleccionada }
+    val bitacora = uiState.bitacora
 
     PantallaBase(titulo = titulo, onVolver = onVolver) {
         item { Text("Selecciona una bitácora", style = MaterialTheme.typography.titleMedium) }
-        if (bitacoras.isEmpty()) {
+        if (uiState.bitacoras.isEmpty()) {
             item { Text("Aún no hay bitácoras publicadas o cerradas.") }
         }
-        items(bitacoras) { b ->
-            BotonOpcion("${b.titulo} · ${b.curso} · ${b.asignatura}", b.id == seleccionada) {
-                onSeleccionar(b.id)
+        items(uiState.bitacoras) { b ->
+            BotonOpcion("${b.titulo} · ${b.curso} · ${b.asignatura}", b.id == uiState.seleccionada) {
+                viewModel.seleccionarBitacora(b.id)
             }
         }
 
         if (bitacora != null) {
-            val enviados = registros.filter { it.bitacoraId == bitacora.id }
-            val estudiantes = DatosPrueba.estudiantesDeCurso(bitacora.curso)
-            val sinParticipacion = estudiantes.filter { e -> enviados.none { it.estudiante == e.usuario } }
-            val participantes = estudiantes.filter { e -> enviados.any { it.estudiante == e.usuario } }
-            val pendientes = enviados.count { it.estado == "pendiente" }
-            val revisados = enviados.count { it.estado == "revisado" }
+            val enviados = uiState.enviados
+            val estudiantes = uiState.estudiantes
+            val sinParticipacion = uiState.sinParticipacion
+            val participantes = uiState.participantes
+            val pendientes = uiState.pendientes
+            val revisados = uiState.revisados
 
             if (modo == "seguimiento") {
                 item { Text("Estudiantes sin participación (${sinParticipacion.size})", style = MaterialTheme.typography.titleMedium) }
@@ -67,7 +66,7 @@ fun DocenteParticipacionScreen(
                 item { Dato("Bitácora", bitacora.titulo) }
                 item { Dato("Curso y asignatura", "${bitacora.curso} · ${bitacora.asignatura}") }
                 item { Dato("Mes y año", "${bitacora.mes} ${bitacora.anio}") }
-                item { Dato("Docente responsable", DatosPrueba.nombreDe(bitacora.docente)) }
+                item { Dato("Docente responsable", uiState.nombreDocente) }
                 item { Dato("Propósito", bitacora.proposito) }
                 item { Dato("Resumen de participación", "${participantes.size} de ${estudiantes.size} estudiantes participaron") }
                 item { Dato("Aportes enviados", "${enviados.size}") }
