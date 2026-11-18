@@ -27,8 +27,14 @@ fun EstudianteRegistroScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(registroExistente?.id) {
-        viewModel.inicializar(bitacora?.id ?: 0, estudiante, registroExistente)
+    LaunchedEffect(registroExistente?.id, bitacora?.id, bitacora?.mes, bitacora?.anio) {
+        viewModel.inicializar(
+            bitacoraId = bitacora?.id ?: 0,
+            mes = bitacora?.mes ?: "",
+            anio = bitacora?.anio ?: "",
+            estudiante = estudiante,
+            registro = registroExistente
+        )
     }
 
     PantallaBase(titulo = "Registro de clase", onVolver = onVolver) {
@@ -48,7 +54,8 @@ fun EstudianteRegistroScreen(
                     uriFoto = uiState.fotografias,
                     enlace = uiState.enlaces,
                     onFotoCambio = { viewModel.cambiarFotografias(it) },
-                    onEnlaceCambio = { viewModel.cambiarEnlaces(it) }
+                    onEnlaceCambio = { viewModel.cambiarEnlaces(it) },
+                    onError = { viewModel.mostrarError(it) }
                 )
             }
 

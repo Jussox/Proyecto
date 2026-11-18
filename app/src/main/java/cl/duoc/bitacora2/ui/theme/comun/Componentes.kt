@@ -4,10 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.Icons
@@ -16,14 +12,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import cl.duoc.bitacora2.ui.theme.colores.colorFondoOpcion
+import cl.duoc.bitacora2.ui.theme.colores.colorMensaje
+import cl.duoc.bitacora2.ui.theme.colores.colorTextoOpcion
 import cl.duoc.bitacora2.data.Asignacion
 
 import androidx.compose.ui.Alignment
 
 
 
+// Estructura común de casi todas las pantallas: barra superior con flecha "Volver" y título, y debajo una lista desplazable con el contenido.
 @Composable
 fun PantallaBase(
     titulo: String,
@@ -67,6 +66,7 @@ fun PantallaBase(
 }
 
 
+// Botón principal de ancho completo; es el botón de acción normal de la app.
 @Composable
 fun BotonAncho(texto: String, onClick: () -> Unit) {
     Button(
@@ -77,6 +77,7 @@ fun BotonAncho(texto: String, onClick: () -> Unit) {
     }
 }
 
+// Botón con solo borde y ancho completo, para acciones menos importantes.
 @Composable
 fun BotonSecundario(texto: String, onClick: () -> Unit) {
     OutlinedButton(
@@ -87,6 +88,7 @@ fun BotonSecundario(texto: String, onClick: () -> Unit) {
     }
 }
 
+// Botón para elegir una opción (por ejemplo perfil o filtro); el elegido cambia de color con animación.
 @Composable
 fun BotonOpcion(
     texto: String,
@@ -95,12 +97,12 @@ fun BotonOpcion(
     onClick: () -> Unit
 ) {
     val colorFondo by animateColorAsState(
-        targetValue = if (seleccionado) Color(0xFF6750A4) else Color(0xFFE8DEF8),
+        targetValue = colorFondoOpcion(seleccionado),
         animationSpec = tween(durationMillis = 400),
         label = "Color de fondo de la opción"
     )
     val colorTexto by animateColorAsState(
-        targetValue = if (seleccionado) Color.White else Color(0xFF4A4458),
+        targetValue = colorTextoOpcion(seleccionado),
         animationSpec = tween(durationMillis = 400),
         label = "Color del texto de la opción"
     )
@@ -117,6 +119,7 @@ fun BotonOpcion(
     }
 }
 
+// Campo de texto con etiqueta para escribir datos en los formularios.
 @Composable
 fun Campo(valor: String, etiqueta: String, onCambio: (String) -> Unit) {
     OutlinedTextField(
@@ -131,47 +134,28 @@ fun Campo(valor: String, etiqueta: String, onCambio: (String) -> Unit) {
     )
 }
 
+// Muestra una línea "Etiqueta: valor"; si el valor está vacío muestra "—".
 @Composable
 fun Dato(etiqueta: String, valor: String) {
     Text("$etiqueta: ${if (valor.isBlank()) "—" else valor}")
 }
 
-fun nombreEstado(estado: String): String {
-    if (estado == "borrador") return "Borrador"
-    if (estado == "pendiente") return "Pendiente de revisión"
-    if (estado == "revisado") return "Revisado"
-    if (estado == "guardada") return "Guardada (sin publicar)"
-    if (estado == "publicada") return "Publicada (activa)"
-    if (estado == "cerrada") return "Cerrada"
-    return estado
-}
-
-// Un color distinto para cada estado (de aportes y de bitácoras)
-fun colorEstado(estado: String): Color {
-    if (estado == "borrador") return Color(0xFF607D8B)
-    if (estado == "pendiente") return Color(0xFFEF6C00)
-    if (estado == "revisado") return Color(0xFF2E7D32)
-    if (estado == "guardada") return Color(0xFF607D8B)
-    if (estado == "publicada") return Color(0xFF00897B)
-    if (estado == "cerrada") return Color(0xFFFD0000)
-    return Color(0xFF6750A4)
-}
-
-
+// Muestra "Estado: ..." con el color del estado; al cambiar de estado, el texto y el color cambian con animación.
 @Composable
 fun EstadoTexto(estado: String) {
     val color by animateColorAsState(
-        targetValue = colorEstado(estado),
+        targetValue = Estado.colorDe(estado),
         animationSpec = tween(durationMillis = 600),
         label = "Color del estado"
     )
 
     Crossfade(
         targetState = estado,
+        animationSpec = tween(DURACION_CROSSFADE),
         label = "Texto del estado"
     ) { estadoActual ->
         Text(
-            text = "Estado: ${nombreEstado(estadoActual)}",
+            text = "Estado: ${Estado.textoDe(estadoActual)}",
             color = color
         )
     }
@@ -183,37 +167,12 @@ fun EstadoTexto(estado: String) {
 fun MensajeAnimado(texto: String, esError: Boolean) {
     AnimatedVisibility(
         visible = texto.isNotEmpty(),
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically()
+        enter = animacionEntradaExpandir,
+        exit = animacionSalidaContraer
     ) {
         Text(
             text = texto,
-            color = if (esError) MaterialTheme.colorScheme.error
-            else MaterialTheme.colorScheme.primary
+            color = colorMensaje(esError)
         )
-    }
-}
-
-@Composable
-fun CursosScreen(
-    titulo: String,
-    asignaciones: List<Asignacion>,
-    textoBoton: String,
-    onVolver: () -> Unit,
-    onElegir: (Asignacion) -> Unit
-) {
-    PantallaBase(titulo = titulo, onVolver = onVolver) {
-        items(asignaciones) { a ->
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(a.curso, style = MaterialTheme.typography.titleMedium)
-                    Text("Asignatura: ${a.asignatura}")
-                    BotonAncho(textoBoton) { onElegir(a) }
-                }
-            }
-        }
     }
 }

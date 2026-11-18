@@ -18,15 +18,12 @@ import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
 import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
 import cl.duoc.bitacora2.ui.theme.comun.Dato
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
-import cl.duoc.bitacora2.ui.theme.comun.nombreEstado
+import cl.duoc.bitacora2.ui.theme.comun.animacionEntradaExpandir
+import cl.duoc.bitacora2.ui.theme.comun.animacionSalidaContraer
+import cl.duoc.bitacora2.ui.theme.comun.Estado
 
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 
@@ -36,7 +33,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.ui.graphics.Color
+import cl.duoc.bitacora2.ui.theme.colores.Blanco
+import cl.duoc.bitacora2.ui.theme.colores.CerrarSesionFondo
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -120,16 +118,8 @@ fun DocenteScreen(
                 // Las opciones aparecen y desaparecen suavemente.
                 AnimatedVisibility(
                     visible = uiState.administracionExpandida,
-                    enter = fadeIn(
-                        animationSpec = tween(250)
-                    ) + expandVertically(
-                        animationSpec = tween(300)
-                    ),
-                    exit = fadeOut(
-                        animationSpec = tween(200)
-                    ) + shrinkVertically(
-                        animationSpec = tween(250)
-                    )
+                    enter = animacionEntradaExpandir,
+                    exit = animacionSalidaContraer
                 ) {
                     Column(
                         verticalArrangement =
@@ -190,10 +180,8 @@ fun DocenteScreen(
 
                 AnimatedVisibility(
                     visible = uiState.revisionExpandida,
-                    enter = fadeIn(animationSpec = tween(250)) +
-                            expandVertically(animationSpec = tween(300)),
-                    exit = fadeOut(animationSpec = tween(200)) +
-                            shrinkVertically(animationSpec = tween(250))
+                    enter = animacionEntradaExpandir,
+                    exit = animacionSalidaContraer
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -245,10 +233,8 @@ fun DocenteScreen(
 
                 AnimatedVisibility(
                     visible = uiState.seguimientoExpandido,
-                    enter = fadeIn(animationSpec = tween(250)) +
-                            expandVertically(animationSpec = tween(300)),
-                    exit = fadeOut(animationSpec = tween(200)) +
-                            shrinkVertically(animationSpec = tween(250))
+                    enter = animacionEntradaExpandir,
+                    exit = animacionSalidaContraer
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -286,8 +272,8 @@ fun DocenteScreen(
                 onClick = { onCerrarSesion() },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFAD1515),
-                    contentColor = Color.White
+                    containerColor = CerrarSesionFondo,
+                    contentColor = Blanco
                 )
             ) {
                 Text("Cerrar sesión")
@@ -318,7 +304,7 @@ fun DocenteBitacorasScreen(
                     Text(b.titulo, style = MaterialTheme.typography.titleMedium)
                     Text("${b.curso} · ${b.asignatura}")
                     Text("${b.mes} ${b.anio}")
-                    Text("Estado: ${nombreEstado(b.estado)}", color = MaterialTheme.colorScheme.primary)
+                    Text("Estado: ${Estado.textoDe(b.estado)}", color = MaterialTheme.colorScheme.primary)
                     Dato("Fecha de publicación", b.fechaPublicacion)
                     Dato("Fecha de cierre", b.fechaCierre)
                     if (b.estado == "guardada") {

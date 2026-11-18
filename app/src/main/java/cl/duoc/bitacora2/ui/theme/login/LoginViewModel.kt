@@ -6,7 +6,6 @@ import cl.duoc.bitacora2.util.Sesion
 import cl.duoc.bitacora2.util.credencialesCorrectas
 import cl.duoc.bitacora2.util.validarPasswordLogin
 import cl.duoc.bitacora2.util.validarUsuario
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,11 +56,6 @@ class LoginViewModel : ViewModel() {
         }
 
         viewModelScope.launch {
-            // Permite que el usuario vea la animación.
-            // En una autenticación real, se esperaría la respuesta
-            // del servicio en lugar de utilizar este retraso.
-            delay(2000)
-
             if (
                 !validarUsuario(estado.usuario) ||
                 !validarPasswordLogin(estado.password)

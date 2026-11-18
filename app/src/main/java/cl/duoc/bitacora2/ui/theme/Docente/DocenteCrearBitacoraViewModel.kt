@@ -7,6 +7,12 @@ import cl.duoc.bitacora2.data.Asignacion
 import cl.duoc.bitacora2.data.Bitacora
 import cl.duoc.bitacora2.data.BitacoraRepository
 import cl.duoc.bitacora2.data.fechaHoy
+import cl.duoc.bitacora2.util.MAX_LARGO_TEXTO_LARGO
+import cl.duoc.bitacora2.util.MAX_LARGO_TITULO
+import cl.duoc.bitacora2.util.validarAnio
+import cl.duoc.bitacora2.util.validarFormularioBitacora
+import cl.duoc.bitacora2.util.validarLargo
+import cl.duoc.bitacora2.util.validarMes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,8 +57,15 @@ class DocenteCrearBitacoraViewModel(
     fun guardar(docente: String, publicar: Boolean, onGuardar: ((Bitacora) -> Unit)? = null) {
         val estado = _uiState.value
         val a = estado.seleccionada
-        if (a == null || estado.mes.isBlank() || estado.anio.isBlank() || estado.titulo.isBlank() ||
-            estado.proposito.isBlank() || estado.instrucciones.isBlank() || estado.preguntas.isBlank()
+        if (!validarFormularioBitacora(
+                asignacion = a,
+                mes = estado.mes,
+                anio = estado.anio,
+                titulo = estado.titulo,
+                proposito = estado.proposito,
+                instrucciones = estado.instrucciones,
+                preguntas = estado.preguntas
+            )
         ) {
             _uiState.update {
                 it.copy(
@@ -60,10 +73,52 @@ class DocenteCrearBitacoraViewModel(
                     mensajeEsError = true
                 )
             }
+        } else if (!validarMes(estado.mes)) {
+            _uiState.update {
+                it.copy(
+                    mensaje = "Ingrese un mes válido (por ejemplo: Octubre)",
+                    mensajeEsError = true
+                )
+            }
+        } else if (!validarAnio(estado.anio)) {
+            _uiState.update {
+                it.copy(
+                    mensaje = "El año debe tener 4 dígitos y ser el actual o el siguiente",
+                    mensajeEsError = true
+                )
+            }
+        } else if (!validarLargo(estado.titulo, MAX_LARGO_TITULO)) {
+            _uiState.update {
+                it.copy(
+                    mensaje = "El título no puede superar los 100 caracteres",
+                    mensajeEsError = true
+                )
+            }
+        } else if (!validarLargo(estado.proposito, MAX_LARGO_TEXTO_LARGO)) {
+            _uiState.update {
+                it.copy(
+                    mensaje = "El propósito no puede superar los 2000 caracteres",
+                    mensajeEsError = true
+                )
+            }
+        } else if (!validarLargo(estado.instrucciones, MAX_LARGO_TEXTO_LARGO)) {
+            _uiState.update {
+                it.copy(
+                    mensaje = "Las instrucciones no pueden superar los 2000 caracteres",
+                    mensajeEsError = true
+                )
+            }
+        } else if (!validarLargo(estado.preguntas, MAX_LARGO_TEXTO_LARGO)) {
+            _uiState.update {
+                it.copy(
+                    mensaje = "Las preguntas no pueden superar los 2000 caracteres",
+                    mensajeEsError = true
+                )
+            }
         } else {
             val nuevaBitacora = Bitacora(
                 docente = docente,
-                curso = a.curso,
+                curso = a!!.curso,
                 asignatura = a.asignatura,
                 mes = estado.mes,
                 anio = estado.anio,

@@ -1,10 +1,8 @@
 package cl.duoc.bitacora2.ui.theme.login
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+import cl.duoc.bitacora2.ui.theme.comun.animacionEntradaExpandir
+import cl.duoc.bitacora2.ui.theme.comun.animacionSalidaContraer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -160,7 +158,7 @@ fun LoginScreen(
                         value = uiState.usuario,
                         onValueChange = { viewModel.cambiarUsuario(it) },
                         label = { Text("Nombre de usuario") },
-                        placeholder = { Text("ej. estudiante@duoc.cl") },
+                        placeholder = { Text("ej. estudiante1") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Person,
@@ -207,8 +205,8 @@ fun LoginScreen(
                     // MENSAJE DE ERROR ANIMADO CON BANNER
                     AnimatedVisibility(
                         visible = uiState.mensajeError.isNotEmpty(),
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically()
+                        enter = animacionEntradaExpandir,
+                        exit = animacionSalidaContraer
                     ) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),

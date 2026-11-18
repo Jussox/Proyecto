@@ -22,7 +22,7 @@ import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
 import cl.duoc.bitacora2.ui.theme.comun.Campo
 import cl.duoc.bitacora2.ui.theme.comun.Dato
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
-import cl.duoc.bitacora2.ui.theme.comun.nombreEstado
+import cl.duoc.bitacora2.ui.theme.comun.Estado
 import coil3.compose.AsyncImage
 
 @Composable
@@ -69,7 +69,7 @@ fun DocenteRevisionScreen(
             }
             item { Dato("Archivos adjuntos", registro.archivos) }
             item { Dato("Enlaces relacionados", registro.enlaces) }
-            item { Dato("Estado", nombreEstado(registro.estado)) }
+            item { Dato("Estado", Estado.textoDe(registro.estado)) }
             item { Text("Retroalimentación", style = MaterialTheme.typography.titleMedium) }
             item { Campo(uiState.comentario, "Comentario de retroalimentación") { viewModel.cambiarComentario(it) } }
             item {

@@ -34,6 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import cl.duoc.bitacora2.ui.theme.colores.MenuMoradoFondo
+import cl.duoc.bitacora2.ui.theme.colores.MenuMoradoIcono
+import cl.duoc.bitacora2.ui.theme.colores.MenuNaranjaFondo
+import cl.duoc.bitacora2.ui.theme.colores.MenuNaranjaIcono
+import cl.duoc.bitacora2.ui.theme.colores.MenuVerdeFondo
+import cl.duoc.bitacora2.ui.theme.colores.MenuVerdeIcono
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -136,8 +142,8 @@ fun EstudianteScreen(
                 titulo = "Bitácoras mensuales publicadas",
                 subtitulo = "Actividades activas para completar",
                 icono = Icons.Default.Assignment,
-                colorIcono = Color(0xFF1E8E3E),
-                colorFondo = Color(0xFFE6F4EA),
+                colorIcono = MenuVerdeIcono,
+                colorFondo = MenuVerdeFondo,
                 onClick = onBitacoras
             )
         }
@@ -147,8 +153,8 @@ fun EstudianteScreen(
                 titulo = "Estado e historial",
                 subtitulo = "Revisa registros enviados y borradores",
                 icono = Icons.Default.History,
-                colorIcono = Color(0xFFE37400),
-                colorFondo = Color(0xFFFEF7E0),
+                colorIcono = MenuNaranjaIcono,
+                colorFondo = MenuNaranjaFondo,
                 onClick = onHistorial
             )
         }
@@ -158,8 +164,8 @@ fun EstudianteScreen(
                 titulo = "Retroalimentación del docente",
                 subtitulo = "Comentarios y observaciones del profesor",
                 icono = Icons.Default.Feedback,
-                colorIcono = Color(0xFF9333EA),
-                colorFondo = Color(0xFFF3E8FF),
+                colorIcono = MenuMoradoIcono,
+                colorFondo = MenuMoradoFondo,
                 onClick = onRetroalimentacion
             )
         }

@@ -1,32 +1,68 @@
 package cl.duoc.bitacora2.ui.theme.comun
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
+import cl.duoc.bitacora2.util.MAX_TAMANO_ARCHIVO_BYTES
+import cl.duoc.bitacora2.util.validarArchivo
 import coil3.compose.AsyncImage
+
+private fun obtenerMetadatosArchivo(context: Context, uri: Uri): Pair<String?, Long> {
+    val mime = context.contentResolver.getType(uri)
+    var tamano = 0L
+
+    try {
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (sizeIndex != -1 && cursor.moveToFirst()) {
+                tamano = cursor.getLong(sizeIndex)
+            }
+        }
+    } catch (_: Exception) {
+    }
+
+    if (tamano <= 0L) {
+        try {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                val buffer = ByteArray(8192)
+                var leidosTotal = 0L
+                val limite = MAX_TAMANO_ARCHIVO_BYTES + 1L
+                while (leidosTotal < limite) {
+                    val porLeer = minOf(buffer.size.toLong(), limite - leidosTotal).toInt()
+                    val leidos = stream.read(buffer, 0, porLeer)
+                    if (leidos == -1) break
+                    leidosTotal += leidos
+                }
+                tamano = leidosTotal
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    return Pair(mime, tamano)
+}
 
 @Composable
 fun AdjuntosSection(
     uriFoto: String,
     enlace: String,
     onFotoCambio: (String) -> Unit,
-    onEnlaceCambio: (String) -> Unit
+    onEnlaceCambio: (String) -> Unit,
+    onError: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -34,6 +70,12 @@ fun AdjuntosSection(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
+            val (tipoMime, tamanoBytes) = obtenerMetadatosArchivo(context, uri)
+            if (!validarArchivo(tipoMime, tamanoBytes)) {
+                onError("Solo se permiten fotografías JPG o PNG de hasta 5 MB")
+                return@rememberLauncherForActivityResult
+            }
+
             // Clave: la URI debe sobrevivir al cerrar la app (los registros persisten en Room)
             context.contentResolver.takePersistableUriPermission(
                 uri,
@@ -53,8 +95,8 @@ fun AdjuntosSection(
 
     AnimatedVisibility(
         visible = uriFoto.isNotBlank(),
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically()
+        enter = animacionEntradaExpandir,
+        exit = animacionSalidaContraer
     ) {
         if (uriFoto.isNotBlank()) {
             AsyncImage(

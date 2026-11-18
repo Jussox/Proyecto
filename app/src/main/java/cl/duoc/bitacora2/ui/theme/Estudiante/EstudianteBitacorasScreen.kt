@@ -19,7 +19,7 @@ import cl.duoc.bitacora2.ui.theme.Bitacora2Theme
 import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
 import cl.duoc.bitacora2.ui.theme.comun.Dato
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
-import cl.duoc.bitacora2.ui.theme.comun.colorEstado
+import cl.duoc.bitacora2.ui.theme.comun.Estado
 
 @Composable
 fun EstudianteBitacorasScreen(
@@ -41,7 +41,7 @@ fun EstudianteBitacorasScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("BITÁCORA ACTIVA", color = colorEstado("publicada"), fontWeight = FontWeight.Bold)
+                    Text("BITÁCORA ACTIVA", color = Estado.colorDe("publicada"), fontWeight = FontWeight.Bold)
                     Text(b.titulo, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                     Text("${b.curso} · ${b.asignatura}")
                     Text("${b.mes} ${b.anio}")

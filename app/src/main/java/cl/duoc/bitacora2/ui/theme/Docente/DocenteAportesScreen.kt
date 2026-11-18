@@ -28,7 +28,7 @@ import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
 import cl.duoc.bitacora2.ui.theme.comun.Campo
 import cl.duoc.bitacora2.ui.theme.comun.Dato
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
-import cl.duoc.bitacora2.ui.theme.comun.nombreEstado
+import cl.duoc.bitacora2.ui.theme.comun.Estado
 import coil3.compose.AsyncImage
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -83,7 +83,7 @@ fun DocenteAportesScreen(
                     Text(DatosPrueba.nombreDe(r.estudiante), style = MaterialTheme.typography.titleMedium)
                     Text("Clase del ${r.fechaClase}")
                     Text("${b?.titulo ?: "—"} · ${b?.curso ?: ""} · ${b?.asignatura ?: ""}")
-                    Text("Estado: ${nombreEstado(r.estado)}", color = MaterialTheme.colorScheme.primary)
+                    Text("Estado: ${Estado.textoDe(r.estado)}", color = MaterialTheme.colorScheme.primary)
                     BotonAncho("Revisar aporte") { onAbrir(r.id) }
                 }
             }
