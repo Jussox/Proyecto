@@ -24,7 +24,6 @@ fun EstudianteRetroalimentacionScreen(
     bitacoras: List<Bitacora>,
     onVolver: () -> Unit
 ) {
-    // Solo registros del estudiante que tienen retroalimentación
     val retroalimentados = registros
         .filter { it.comentario.isNotBlank() || it.estado == "revisado" }
         .sortedByDescending { it.fechaRetroalimentacion }

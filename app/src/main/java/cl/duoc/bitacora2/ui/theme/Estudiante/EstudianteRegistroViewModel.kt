@@ -1,22 +1,16 @@
 package cl.duoc.bitacora2.ui.theme.Estudiante
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import cl.duoc.bitacora2.data.BitacoraRepository
 import cl.duoc.bitacora2.data.Registro
 import cl.duoc.bitacora2.data.fechaHoy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class EstudianteRegistroViewModel(
-    private val repository: BitacoraRepository? = null
-) : ViewModel() {
+class EstudianteRegistroViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(EstudianteRegistroUiState())
     val uiState: StateFlow<EstudianteRegistroUiState> = _uiState.asStateFlow()
@@ -45,37 +39,14 @@ class EstudianteRegistroViewModel(
         }
     }
 
-    fun cambiarFecha(valor: String) {
-        _uiState.update { it.copy(fecha = valor) }
-    }
-
-    fun cambiarContenido(valor: String) {
-        _uiState.update { it.copy(contenido = valor) }
-    }
-
-    fun cambiarActividad(valor: String) {
-        _uiState.update { it.copy(actividad = valor) }
-    }
-
-    fun cambiarAprendizaje(valor: String) {
-        _uiState.update { it.copy(aprendizaje = valor) }
-    }
-
-    fun cambiarDudas(valor: String) {
-        _uiState.update { it.copy(dudas = valor) }
-    }
-
-    fun cambiarFotografias(valor: String) {
-        _uiState.update { it.copy(fotografias = valor) }
-    }
-
-    fun cambiarArchivos(valor: String) {
-        _uiState.update { it.copy(archivos = valor) }
-    }
-
-    fun cambiarEnlaces(valor: String) {
-        _uiState.update { it.copy(enlaces = valor) }
-    }
+    fun cambiarFecha(valor: String) { _uiState.update { it.copy(fecha = valor) } }
+    fun cambiarContenido(valor: String) { _uiState.update { it.copy(contenido = valor) } }
+    fun cambiarActividad(valor: String) { _uiState.update { it.copy(actividad = valor) } }
+    fun cambiarAprendizaje(valor: String) { _uiState.update { it.copy(aprendizaje = valor) } }
+    fun cambiarDudas(valor: String) { _uiState.update { it.copy(dudas = valor) } }
+    fun cambiarFotografias(valor: String) { _uiState.update { it.copy(fotografias = valor) } }
+    fun cambiarArchivos(valor: String) { _uiState.update { it.copy(archivos = valor) } }
+    fun cambiarEnlaces(valor: String) { _uiState.update { it.copy(enlaces = valor) } }
 
     private fun fechaValida(fecha: String): Boolean {
         return try {
@@ -105,23 +76,17 @@ class EstudianteRegistroViewModel(
             estado = estado,
             comentario = reg?.comentario ?: "",
             fechaCreacion = reg?.fechaCreacion ?: fechaHoy(),
-            fechaEnvio = if (estado == "pendiente") {
-                fechaHoy()
-            } else {
-                reg?.fechaEnvio ?: ""
-            },
+            fechaEnvio = if (estado == "pendiente") fechaHoy() else reg?.fechaEnvio ?: "",
             fechaRetroalimentacion = reg?.fechaRetroalimentacion ?: "",
             docenteRevisor = reg?.docenteRevisor ?: ""
         )
     }
 
     private fun limpiar() {
-        _uiState.update {
-            EstudianteRegistroUiState()
-        }
+        _uiState.update { EstudianteRegistroUiState() }
     }
 
-    fun guardarBorrador(onGuardar: ((Registro) -> Unit)? = null) {
+    fun guardarBorrador(onGuardar: (Registro) -> Unit) {
         val s = _uiState.value
         if (!fechaValida(s.fecha)) {
             _uiState.update {
@@ -132,14 +97,7 @@ class EstudianteRegistroViewModel(
             }
         } else {
             val registro = construir("borrador")
-            viewModelScope.launch {
-                if (registro.id == 0) {
-                    repository?.guardarRegistro(registro)
-                } else {
-                    repository?.actualizarRegistro(registro)
-                }
-                onGuardar?.invoke(registro)
-            }
+            onGuardar(registro)
             limpiar()
             _uiState.update {
                 it.copy(
@@ -150,13 +108,9 @@ class EstudianteRegistroViewModel(
         }
     }
 
-    fun enviarAlDocente(onGuardar: ((Registro) -> Unit)? = null) {
+    fun enviarAlDocente(onGuardar: (Registro) -> Unit) {
         val s = _uiState.value
-        if (!fechaValida(s.fecha) ||
-            s.contenido.isBlank() ||
-            s.actividad.isBlank() ||
-            s.aprendizaje.isBlank()
-        ) {
+        if (!fechaValida(s.fecha) || s.contenido.isBlank() || s.actividad.isBlank() || s.aprendizaje.isBlank()) {
             _uiState.update {
                 it.copy(
                     mensaje = "Ingrese una fecha válida (dd/MM/aaaa) y complete contenido, actividad y aprendizaje",
@@ -165,14 +119,7 @@ class EstudianteRegistroViewModel(
             }
         } else {
             val registro = construir("pendiente")
-            viewModelScope.launch {
-                if (registro.id == 0) {
-                    repository?.guardarRegistro(registro)
-                } else {
-                    repository?.actualizarRegistro(registro)
-                }
-                onGuardar?.invoke(registro)
-            }
+            onGuardar(registro)
             limpiar()
             _uiState.update {
                 it.copy(
@@ -181,17 +128,5 @@ class EstudianteRegistroViewModel(
                 )
             }
         }
-    }
-}
-
-class EstudianteRegistroViewModelFactory(
-    private val repository: BitacoraRepository
-) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(EstudianteRegistroViewModel::class.java)) {
-            return EstudianteRegistroViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }

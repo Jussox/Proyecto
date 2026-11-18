@@ -1,13 +1,20 @@
 package cl.duoc.bitacora2.ui.theme.Estudiante
 
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import cl.duoc.bitacora2.data.Registro
-import cl.duoc.bitacora2.data.Bitacora
-import cl.duoc.bitacora2.ui.theme.comun.*
-
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.bitacora2.data.Bitacora
+import cl.duoc.bitacora2.data.Registro
+import cl.duoc.bitacora2.ui.theme.comun.AdjuntosSection
+import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
+import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
+import cl.duoc.bitacora2.ui.theme.comun.Campo
+import cl.duoc.bitacora2.ui.theme.comun.MensajeAnimado
+import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 
 @Composable
 fun EstudianteRegistroScreen(
@@ -18,7 +25,7 @@ fun EstudianteRegistroScreen(
     onGuardar: (Registro) -> Unit,
     viewModel: EstudianteRegistroViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(registroExistente?.id) {
         viewModel.inicializar(bitacora?.id ?: 0, estudiante, registroExistente)
@@ -35,9 +42,7 @@ fun EstudianteRegistroScreen(
             item { Campo(uiState.aprendizaje, "Qué aprendió") { viewModel.cambiarAprendizaje(it) } }
             item { Campo(uiState.dudas, "Dudas o dificultades") { viewModel.cambiarDudas(it) } }
 
-            item {
-                Text("Adjuntos", style = MaterialTheme.typography.titleMedium)
-            }
+            item { Text("Adjuntos", style = MaterialTheme.typography.titleMedium) }
             item {
                 AdjuntosSection(
                     uriFoto = uiState.fotografias,
