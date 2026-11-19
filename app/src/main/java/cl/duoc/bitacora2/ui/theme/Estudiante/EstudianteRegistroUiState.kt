@@ -5,10 +5,13 @@ data class EstudianteRegistroUiState(
     val contenido: String = "",
     val actividad: String = "",
     val aprendizaje: String = "",
-    val dudas: String = "",
+    val dudas: String = "",                     // Texto de la duda que se está escribiendo
+    val listaDudas: List<String> = emptyList(), // Lista de dudas agregadas
     val fotografias: String = "",
     val archivos: String = "",
     val enlaces: String = "",
     val mensaje: String = "",
     val mensajeEsError: Boolean = false
 )
+
+

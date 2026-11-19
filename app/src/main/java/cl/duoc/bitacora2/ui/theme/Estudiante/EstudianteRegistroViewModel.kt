@@ -3,15 +3,12 @@ package cl.duoc.bitacora2.ui.theme.Estudiante
 import androidx.lifecycle.ViewModel
 import cl.duoc.bitacora2.data.Registro
 import cl.duoc.bitacora2.data.fechaHoy
-import cl.duoc.bitacora2.util.MAX_LARGO_TEXTO_LARGO
-import cl.duoc.bitacora2.util.validarCamposRegistro
-import cl.duoc.bitacora2.util.validarEnlace
-import cl.duoc.bitacora2.util.validarFechaClase
-import cl.duoc.bitacora2.util.validarLargo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class EstudianteRegistroViewModel : ViewModel() {
 
@@ -19,51 +16,47 @@ class EstudianteRegistroViewModel : ViewModel() {
     val uiState: StateFlow<EstudianteRegistroUiState> = _uiState.asStateFlow()
 
     private var bitacoraId: Int = 0
-    private var bitacoraMes: String = ""
-    private var bitacoraAnio: String = ""
+    private var mes: String = ""
+    private var anio: String = ""
     private var estudiante: String = ""
     private var registroExistente: Registro? = null
-    private var yaCargado: Boolean = false
 
     fun inicializar(
         bitacoraId: Int,
-        mes: String,
-        anio: String,
+        mes: String = "",
+        anio: String = "",
         estudiante: String,
         registro: Registro?
     ) {
-        if (bitacoraId != 0) {
-            this.bitacoraId = bitacoraId
-        }
-        if (mes.isNotBlank()) {
-            this.bitacoraMes = mes
-        }
-        if (anio.isNotBlank()) {
-            this.bitacoraAnio = anio
-        }
-        if (estudiante.isNotBlank()) {
-            this.estudiante = estudiante
-        }
+        this.bitacoraId = bitacoraId
+        this.mes = mes
+        this.anio = anio
+        this.estudiante = estudiante
         this.registroExistente = registro
 
         if (registro != null) {
-            if (!yaCargado) {
-                yaCargado = true
-                _uiState.update {
-                    it.copy(
-                        fecha = registro.fechaClase,
-                        contenido = registro.contenido,
-                        actividad = registro.actividad,
-                        aprendizaje = registro.aprendizaje,
-                        dudas = registro.dudas,
-                        fotografias = registro.fotografias,
-                        archivos = registro.archivos,
-                        enlaces = registro.enlaces
-                    )
-                }
+            // Si el registro ya existía, separamos las dudas guardadas por línea
+            val dudasSeparadas = if (registro.dudas.isNotBlank()) {
+                registro.dudas.lines().map { it.trim().removePrefix("•").trim() }.filter { it.isNotBlank() }
+            } else {
+                emptyList()
             }
-        } else {
-            yaCargado = false
+
+            _uiState.update {
+                it.copy(
+                    fecha = registro.fechaClase,
+                    contenido = registro.contenido,
+                    actividad = registro.actividad,
+                    aprendizaje = registro.aprendizaje,
+                    dudas = "",
+                    listaDudas = dudasSeparadas,
+                    fotografias = registro.fotografias,
+                    archivos = registro.archivos,
+                    enlaces = registro.enlaces,
+                    mensaje = "",
+                    mensajeEsError = false
+                )
+            }
         }
     }
 
@@ -76,18 +69,54 @@ class EstudianteRegistroViewModel : ViewModel() {
     fun cambiarArchivos(valor: String) { _uiState.update { it.copy(archivos = valor) } }
     fun cambiarEnlaces(valor: String) { _uiState.update { it.copy(enlaces = valor) } }
 
-    fun mostrarError(texto: String) {
+    fun agregarDuda() {
+        val texto = _uiState.value.dudas.trim()
+        if (texto.isNotEmpty()) {
+            _uiState.update {
+                it.copy(
+                    listaDudas = it.listaDudas + texto,
+                    dudas = "" // Limpia el campo para redactar la siguiente
+                )
+            }
+        }
+    }
+
+    fun eliminarDuda(indice: Int) {
         _uiState.update {
-            it.copy(
-                mensaje = texto,
-                mensajeEsError = true
-            )
+            val nuevaLista = it.listaDudas.toMutableList()
+            if (indice in nuevaLista.indices) {
+                nuevaLista.removeAt(indice)
+            }
+            it.copy(listaDudas = nuevaLista)
+        }
+    }
+
+    fun mostrarError(mensaje: String) {
+        _uiState.update { it.copy(mensaje = mensaje, mensajeEsError = true) }
+    }
+
+    private fun fechaValida(fecha: String): Boolean {
+        return try {
+            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            formato.isLenient = false
+            formato.parse(fecha) != null
+        } catch (e: Exception) {
+            false
         }
     }
 
     private fun construir(estado: String): Registro {
         val s = _uiState.value
         val reg = registroExistente
+
+        // Une las dudas agregadas a la lista (y si el alumno dejó algo escrito en el campo, lo incluye)
+        val dudasFinales = if (s.dudas.isNotBlank()) {
+            s.listaDudas + s.dudas.trim()
+        } else {
+            s.listaDudas
+        }
+        val dudasTexto = dudasFinales.joinToString("\n")
+
         return Registro(
             id = reg?.id ?: 0,
             bitacoraId = bitacoraId,
@@ -96,7 +125,7 @@ class EstudianteRegistroViewModel : ViewModel() {
             contenido = s.contenido,
             actividad = s.actividad,
             aprendizaje = s.aprendizaje,
-            dudas = s.dudas,
+            dudas = dudasTexto,
             fotografias = s.fotografias,
             archivos = s.archivos,
             enlaces = s.enlaces,
@@ -110,67 +139,51 @@ class EstudianteRegistroViewModel : ViewModel() {
     }
 
     private fun limpiar() {
-        yaCargado = false
         _uiState.update { EstudianteRegistroUiState() }
     }
 
     fun guardarBorrador(onGuardar: (Registro) -> Unit) {
         val s = _uiState.value
-        if (!validarFechaClase(s.fecha, bitacoraMes, bitacoraAnio)) {
-            mostrarError("La fecha debe tener formato dd/mm/aaaa, no ser futura y estar dentro de $bitacoraMes $bitacoraAnio (el mes de la bitácora)")
-        } else if (!validarLargo(s.contenido, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("El contenido no puede superar los 2000 caracteres")
-        } else if (!validarLargo(s.actividad, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("La actividad no puede superar los 2000 caracteres")
-        } else if (!validarLargo(s.aprendizaje, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("El aprendizaje no puede superar los 2000 caracteres")
-        } else if (!validarLargo(s.dudas, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("Las dudas no pueden superar los 2000 caracteres")
-        } else if (!validarLargo(s.enlaces, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("Los enlaces no pueden superar los 2000 caracteres")
-        } else if (!validarEnlace(s.enlaces)) {
-            mostrarError("El enlace debe comenzar con http:// o https://")
-        } else {
-            val registro = construir("borrador")
-            onGuardar(registro)
-            limpiar()
+        if (!fechaValida(s.fecha)) {
             _uiState.update {
                 it.copy(
-                    mensaje = "Borrador guardado. Puedes enviarlo desde tu historial.",
-                    mensajeEsError = false
+                    mensaje = "Ingrese una fecha válida con formato dd/MM/aaaa (ejemplo: 16/10/2026)",
+                    mensajeEsError = true
                 )
             }
+            return
+        }
+
+        val registro = construir("borrador")
+        onGuardar(registro)
+        _uiState.update {
+            it.copy(
+                mensaje = "Borrador guardado con éxito.",
+                mensajeEsError = false
+            )
         }
     }
 
     fun enviarAlDocente(onGuardar: (Registro) -> Unit) {
         val s = _uiState.value
-        if (!validarFechaClase(s.fecha, bitacoraMes, bitacoraAnio)) {
-            mostrarError("La fecha debe tener formato dd/mm/aaaa, no ser futura y estar dentro de $bitacoraMes $bitacoraAnio (el mes de la bitácora)")
-        } else if (!validarCamposRegistro(s.contenido, s.actividad, s.aprendizaje)) {
-            mostrarError("Complete contenido, actividad y aprendizaje")
-        } else if (!validarLargo(s.contenido, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("El contenido no puede superar los 2000 caracteres")
-        } else if (!validarLargo(s.actividad, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("La actividad no puede superar los 2000 caracteres")
-        } else if (!validarLargo(s.aprendizaje, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("El aprendizaje no puede superar los 2000 caracteres")
-        } else if (!validarLargo(s.dudas, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("Las dudas no pueden superar los 2000 caracteres")
-        } else if (!validarLargo(s.enlaces, MAX_LARGO_TEXTO_LARGO)) {
-            mostrarError("Los enlaces no pueden superar los 2000 caracteres")
-        } else if (!validarEnlace(s.enlaces)) {
-            mostrarError("El enlace debe comenzar con http:// o https://")
-        } else {
-            val registro = construir("pendiente")
-            onGuardar(registro)
-            limpiar()
+        if (!fechaValida(s.fecha) || s.contenido.isBlank() || s.actividad.isBlank() || s.aprendizaje.isBlank()) {
             _uiState.update {
                 it.copy(
-                    mensaje = "Registro enviado. Estado: pendiente de revisión.",
-                    mensajeEsError = false
+                    mensaje = "Ingrese una fecha válida (dd/MM/aaaa) y complete contenido, actividad y aprendizaje",
+                    mensajeEsError = true
                 )
             }
+            return
+        }
+
+        val registro = construir("pendiente")
+        onGuardar(registro)
+        limpiar()
+        _uiState.update {
+            it.copy(
+                mensaje = "Registro enviado. Estado: pendiente de revisión.",
+                mensajeEsError = false
+            )
         }
     }
 }
