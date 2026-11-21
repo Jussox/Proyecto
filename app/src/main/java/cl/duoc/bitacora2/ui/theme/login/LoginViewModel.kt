@@ -6,8 +6,7 @@ import cl.duoc.bitacora2.data.remoto.RemotoRepository
 import cl.duoc.bitacora2.data.remoto.dto.LoginRequest
 import cl.duoc.bitacora2.util.Sesion
 import cl.duoc.bitacora2.util.mensajeDeError
-import cl.duoc.bitacora2.util.validarPasswordLogin
-import cl.duoc.bitacora2.util.validarUsuario
+import cl.duoc.bitacora2.util.validarCamposLogin
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,8 +44,9 @@ class LoginViewModel(
         if (estado.cargando) return
 
         // Validaciones locales previas.
-        if (!validarUsuario(estado.usuario) || !validarPasswordLogin(estado.password)) {
-            _uiState.update { it.copy(mensajeError = "Debe ingresar usuario y contraseña") }
+        val errorValidacion = validarCamposLogin(estado.usuario, estado.password)
+        if (errorValidacion != null) {
+            _uiState.update { it.copy(mensajeError = errorValidacion) }
             return
         }
 

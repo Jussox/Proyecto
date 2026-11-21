@@ -1,6 +1,5 @@
 package cl.duoc.bitacora2.ui.theme.Docente
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -66,8 +65,7 @@ import cl.duoc.bitacora2.ui.theme.colores.ParticipacionFondo
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionIcono
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionTarjeta
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
-import cl.duoc.bitacora2.ui.theme.comun.animacionEntradaExpandir
-import cl.duoc.bitacora2.ui.theme.comun.animacionSalidaContraer
+import cl.duoc.bitacora2.ui.theme.comun.AnimacionAcordeonDocente
 
 @Composable
 fun DocenteScreen(
@@ -464,11 +462,7 @@ private fun SeccionAcordeonDocente(
                     )
                 }
 
-                AnimatedVisibility(
-                    visible = expandido,
-                    enter = animacionEntradaExpandir,
-                    exit = animacionSalidaContraer
-                ) {
+                AnimacionAcordeonDocente(expandido = expandido) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

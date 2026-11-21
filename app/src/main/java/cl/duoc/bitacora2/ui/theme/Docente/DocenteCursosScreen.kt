@@ -27,22 +27,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cl.duoc.bitacora2.data.Asignacion
-import cl.duoc.bitacora2.ui.theme.Bitacora2Theme
 import cl.duoc.bitacora2.ui.theme.colores.MenuVerdeFondo
 import cl.duoc.bitacora2.ui.theme.colores.MenuVerdeIcono
 import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
+import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 
 @Composable
-fun CursosScreen(
-    titulo: String,
+fun DocenteCursosScreen(
+    titulo: String = "Mis cursos y asignaturas",
     asignaciones: List<Asignacion>,
-    textoBoton: String,
     onVolver: () -> Unit,
-    onElegir: (Asignacion) -> Unit
+    onVerBitacoras: (Asignacion) -> Unit,
+    onVerEstudiantes: (Asignacion) -> Unit
 ) {
     PantallaBase(titulo = titulo, onVolver = onVolver) {
         if (asignaciones.isEmpty()) {
@@ -107,10 +106,7 @@ fun CursosScreen(
 
             items(asignaciones) { a ->
                 ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .clickable { onElegir(a) },
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.elevatedCardColors(
                         containerColor = MaterialTheme.colorScheme.surface
@@ -210,8 +206,12 @@ fun CursosScreen(
                             }
                         }
 
-                        BotonAncho(textoBoton) {
-                            onElegir(a)
+                        BotonAncho("Ver bitácoras") {
+                            onVerBitacoras(a)
+                        }
+
+                        BotonSecundario("Ver estudiantes") {
+                            onVerEstudiantes(a)
                         }
                     }
                 }

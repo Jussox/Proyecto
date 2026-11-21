@@ -1,8 +1,6 @@
 package cl.duoc.bitacora2.ui.theme.login
 
-import androidx.compose.animation.AnimatedVisibility
-import cl.duoc.bitacora2.ui.theme.comun.animacionEntradaExpandir
-import cl.duoc.bitacora2.ui.theme.comun.animacionSalidaContraer
+import cl.duoc.bitacora2.ui.theme.comun.BannerErrorAnimado
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +21,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Abc
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
@@ -63,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.bitacora2.ui.theme.Bitacora2Theme
+import cl.duoc.bitacora2.ui.theme.colores.FondoPantalla
 
 @Composable
 fun LoginScreen(
@@ -74,7 +72,9 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        containerColor = FondoPantalla
+    ) { innerPadding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -203,35 +203,7 @@ fun LoginScreen(
                     )
 
                     // MENSAJE DE ERROR ANIMADO CON BANNER
-                    AnimatedVisibility(
-                        visible = uiState.mensajeError.isNotEmpty(),
-                        enter = animacionEntradaExpandir,
-                        exit = animacionSalidaContraer
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.errorContainer,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "Error",
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = uiState.mensajeError,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
-                        }
-                    }
+                    BannerErrorAnimado(mensaje = uiState.mensajeError)
 
                     // BOTÓN DE ACCIÓN
                     Button(

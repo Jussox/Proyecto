@@ -40,10 +40,9 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.bitacora2.data.remoto.dto.BitacoraDto
-import cl.duoc.bitacora2.ui.theme.colores.EstadoBorrador
 import cl.duoc.bitacora2.ui.theme.colores.EstadoCerrada
-import cl.duoc.bitacora2.ui.theme.colores.EstadoPublicada
 import cl.duoc.bitacora2.ui.theme.colores.OpcionNoSeleccionadaFondo
+import cl.duoc.bitacora2.ui.theme.colores.colorEstadoBitacora
 import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
 import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
 import cl.duoc.bitacora2.ui.theme.comun.Dato
@@ -54,6 +53,8 @@ import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 fun DocenteBitacorasScreen(
     titulo: String = "Bitácoras mensuales",
     soloCerradas: Boolean = false,
+    filtroCurso: String? = null,
+    filtroAsignatura: String? = null,
     onVolver: () -> Unit,
     onVerAportes: (Long) -> Unit,
     onEditar: ((Long) -> Unit)? = null,
@@ -62,9 +63,18 @@ fun DocenteBitacorasScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var bitacoraParaCerrar by remember { mutableStateOf<BitacoraDto?>(null) }
 
-    val bitacorasAMostrar = remember(uiState.bitacoras, soloCerradas) {
-        if (soloCerradas) uiState.bitacoras.filter { it.estado == "cerrada" }
-        else uiState.bitacoras
+    val bitacorasAMostrar = remember(uiState.bitacoras, soloCerradas, filtroCurso, filtroAsignatura) {
+        var lista = uiState.bitacoras
+        if (soloCerradas) {
+            lista = lista.filter { it.estado == "cerrada" }
+        }
+        if (!filtroCurso.isNullOrBlank()) {
+            lista = lista.filter { it.curso.equals(filtroCurso, ignoreCase = true) }
+        }
+        if (!filtroAsignatura.isNullOrBlank()) {
+            lista = lista.filter { it.asignatura.equals(filtroAsignatura, ignoreCase = true) }
+        }
+        lista
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -199,7 +209,10 @@ fun DocenteBitacorasScreen(
                             }
                         }
                         Text(
-                            text = "No hay bitácoras para mostrar.",
+                            text = if (!filtroAsignatura.isNullOrBlank())
+                                "No hay bitácoras registradas para $filtroAsignatura ($filtroCurso)."
+                            else
+                                "No hay bitácoras para mostrar.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -211,11 +224,7 @@ fun DocenteBitacorasScreen(
         // 5. Lista de bitácoras
         else {
             items(bitacorasAMostrar, key = { it.id ?: 0L }) { b ->
-                val colorEstado = when (b.estado) {
-                    "publicada" -> EstadoPublicada
-                    "cerrada" -> EstadoCerrada
-                    else -> EstadoBorrador
-                }
+                val colorEstado = colorEstadoBitacora(b.estado)
 
                 val accionEnEjecucion = uiState.accionEnProgresoId == b.id
 

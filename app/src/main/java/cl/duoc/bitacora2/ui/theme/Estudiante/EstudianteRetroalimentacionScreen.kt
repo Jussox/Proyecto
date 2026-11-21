@@ -32,7 +32,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import cl.duoc.bitacora2.ui.theme.colores.MenuVerdeFondo
+import cl.duoc.bitacora2.ui.theme.colores.MenuVerdeIcono
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -228,7 +229,7 @@ fun EstudianteRetroalimentacionScreen(
                         // Badge verde de "Revisado"
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFE6F4EA)
+                            color = MenuVerdeFondo
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -239,12 +240,12 @@ fun EstudianteRetroalimentacionScreen(
                                     imageVector = Icons.Default.CheckCircle,
                                     contentDescription = null,
                                     modifier = Modifier.size(13.dp),
-                                    tint = Color(0xFF1E8E3E)
+                                    tint = MenuVerdeIcono
                                 )
                                 Text(
                                     text = "Revisado",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = Color(0xFF1E8E3E)
+                                    color = MenuVerdeIcono
                                 )
                             }
                         }

@@ -7,7 +7,6 @@ import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +17,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import cl.duoc.bitacora2.util.MAX_TAMANO_ARCHIVO_BYTES
-import cl.duoc.bitacora2.util.validarArchivo
+import cl.duoc.bitacora2.util.validarArchivoAdjunto
 import coil3.compose.AsyncImage
 
 private fun obtenerMetadatosArchivo(context: Context, uri: Uri): Pair<String?, Long> {
@@ -71,8 +70,9 @@ fun AdjuntosSection(
     ) { uri ->
         if (uri != null) {
             val (tipoMime, tamanoBytes) = obtenerMetadatosArchivo(context, uri)
-            if (!validarArchivo(tipoMime, tamanoBytes)) {
-                onError("Solo se permiten fotografías JPG o PNG de hasta 5 MB")
+            val errorArchivo = validarArchivoAdjunto(tipoMime, tamanoBytes)
+            if (errorArchivo != null) {
+                onError(errorArchivo)
                 return@rememberLauncherForActivityResult
             }
 
@@ -93,11 +93,7 @@ fun AdjuntosSection(
         )
     }
 
-    AnimatedVisibility(
-        visible = uriFoto.isNotBlank(),
-        enter = animacionEntradaExpandir,
-        exit = animacionSalidaContraer
-    ) {
+    AnimacionFotoAdjunta(visible = uriFoto.isNotBlank()) {
         if (uriFoto.isNotBlank()) {
             AsyncImage(
                 model = Uri.parse(uriFoto),

@@ -49,10 +49,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cl.duoc.bitacora2.ui.theme.colores.EstadoBorrador
 import cl.duoc.bitacora2.ui.theme.colores.EstadoCerrada
 import cl.duoc.bitacora2.ui.theme.colores.EstadoPendiente
-import cl.duoc.bitacora2.ui.theme.colores.EstadoRevisado
+import cl.duoc.bitacora2.ui.theme.colores.colorEstadoRegistro
+import cl.duoc.bitacora2.ui.theme.colores.colorFondoInsignia
 import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 
@@ -328,7 +328,7 @@ fun EstudianteHistorialScreen(
                                     ) {
                                         Surface(
                                             shape = RoundedCornerShape(8.dp),
-                                            color = EstadoCerrada.copy(alpha = 0.12f)
+                                            color = colorFondoInsignia(EstadoCerrada)
                                         ) {
                                             Row(
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
@@ -497,11 +497,7 @@ fun EstudianteHistorialScreen(
 
 @Composable
 private fun InsigniaEstadoRegistro(estado: String) {
-    val color = when (estado) {
-        "revisado" -> EstadoRevisado
-        "pendiente" -> EstadoPendiente
-        else -> EstadoBorrador
-    }
+    val color = colorEstadoRegistro(estado)
     val texto = when (estado) {
         "revisado" -> "Revisado"
         "pendiente" -> "Pendiente"
@@ -515,7 +511,7 @@ private fun InsigniaEstadoRegistro(estado: String) {
 
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = color.copy(alpha = 0.12f)
+        color = colorFondoInsignia(color)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),

@@ -52,6 +52,8 @@ import cl.duoc.bitacora2.ui.theme.colores.OpcionNoSeleccionadaTexto
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionFondo
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionIcono
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionTarjeta
+import cl.duoc.bitacora2.ui.theme.colores.colorFondoParticipacion
+import cl.duoc.bitacora2.ui.theme.colores.colorParticipacion
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 
 @Composable
@@ -640,7 +642,7 @@ private fun TarjetaEstudiante(
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = if (participo) EstadoRevisado else EstadoPendiente
+                        color = colorParticipacion(participo)
                     )
                 }
             }
@@ -663,7 +665,7 @@ private fun TarjetaEstudiante(
 
             Surface(
                 shape = RoundedCornerShape(6.dp),
-                color = if (participo) MenuVerdeFondo else MenuNaranjaFondo
+                color = colorFondoParticipacion(participo)
             ) {
                 Text(
                     text = if (participo) "PARTICIPÓ" else "SIN ENVÍO",
@@ -671,7 +673,7 @@ private fun TarjetaEstudiante(
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = if (participo) EstadoRevisado else EstadoPendiente
+                    color = colorParticipacion(participo)
                 )
             }
         }

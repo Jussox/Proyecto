@@ -2,11 +2,10 @@
 package cl.duoc.bitacora2
 
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import cl.duoc.bitacora2.ui.theme.comun.transicionEntradaPantalla
+import cl.duoc.bitacora2.ui.theme.comun.transicionPopEntradaPantalla
+import cl.duoc.bitacora2.ui.theme.comun.transicionPopSalidaPantalla
+import cl.duoc.bitacora2.ui.theme.comun.transicionSalidaPantalla
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,6 +19,8 @@ import cl.duoc.bitacora2.data.DatosPrueba
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteAportesScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteBitacorasScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteCrearBitacoraScreen
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteCursosScreen
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteEstudiantesScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteParticipacionScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteRecordatoriosScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteRevisionScreen
@@ -57,44 +58,16 @@ fun Navegacion() {
         startDestination = "login",
 
         // La pantalla nueva entra desde la derecha.
-        enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { it / 3 },
-                animationSpec = tween(300)
-            ) + fadeIn(
-                animationSpec = tween(300)
-            )
-        },
+        enterTransition = { transicionEntradaPantalla() },
 
         // La pantalla actual sale hacia la izquierda.
-        exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { -it / 3 },
-                animationSpec = tween(250)
-            ) + fadeOut(
-                animationSpec = tween(250)
-            )
-        },
+        exitTransition = { transicionSalidaPantalla() },
 
         // Al volver, la pantalla anterior entra desde la izquierda.
-        popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { -it / 3 },
-                animationSpec = tween(300)
-            ) + fadeIn(
-                animationSpec = tween(300)
-            )
-        },
+        popEnterTransition = { transicionPopEntradaPantalla() },
 
         // La pantalla actual sale hacia la derecha al regresar.
-        popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { it / 3 },
-                animationSpec = tween(250)
-            ) + fadeOut(
-                animationSpec = tween(250)
-            )
-        }
+        popExitTransition = { transicionPopSalidaPantalla() }
 
     ) {
         // INICIO DE SESIÓN
@@ -303,35 +276,80 @@ fun Navegacion() {
 
 
         composable("docente_cursos") {
-            CursosScreen(
+            DocenteCursosScreen(
                 titulo = "Mis cursos y asignaturas",
                 asignaciones = DatosPrueba.asignacionesDeDocente(Sesion.usuario),
-                textoBoton = "Ver bitácoras",
                 onVolver = {
                     navController.popBackStack()
                 },
-                onElegir = { asignacion ->
+                onVerBitacoras = { asignacion ->
                     navController.navigate(
                         "docente_bitacoras_curso/${Uri.encode(asignacion.curso)}/${Uri.encode(asignacion.asignatura)}"
+                    )
+                },
+                onVerEstudiantes = { asignacion ->
+                    navController.navigate(
+                        "docente_estudiantes_curso/${Uri.encode(asignacion.curso)}/${Uri.encode(asignacion.asignatura)}"
                     )
                 }
             )
         }
 
+        // ESTUDIANTES DEL CURSO
+        composable(
+            route = "docente_estudiantes_curso/{curso}/{asignatura}",
+            arguments = listOf(
+                navArgument("curso") { type = NavType.StringType },
+                navArgument("asignatura") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val curso = Uri.decode(backStackEntry.arguments?.getString("curso") ?: "")
+            val asignatura = Uri.decode(backStackEntry.arguments?.getString("asignatura") ?: "")
+            DocenteEstudiantesScreen(
+                curso = curso,
+                asignatura = asignatura,
+                onVolver = { navController.popBackStack() }
+            )
+        }
 
-        // BITÁCORAS DEL DOCENTE
-           composable("docente_bitacoras") {
-               DocenteBitacorasScreen(
-                   titulo = "Bitácoras mensuales",
-                   onVolver = { navController.popBackStack() },
-                   onVerAportes = { id ->
-                       navController.navigate("docente_aportes/$id")
-                   },
-                   onEditar = { id ->
-                       navController.navigate("docente_editar_bitacora/$id")
-                   }
-               )
-           }
+
+        // BITÁCORAS DEL DOCENTE (todas)
+        composable("docente_bitacoras") {
+            DocenteBitacorasScreen(
+                titulo = "Bitácoras mensuales",
+                onVolver = { navController.popBackStack() },
+                onVerAportes = { id ->
+                    navController.navigate("docente_aportes/$id")
+                },
+                onEditar = { id ->
+                    navController.navigate("docente_editar_bitacora/$id")
+                }
+            )
+        }
+
+        // BITÁCORAS DEL DOCENTE FILTRADAS POR CURSO Y ASIGNATURA
+        composable(
+            route = "docente_bitacoras_curso/{curso}/{asignatura}",
+            arguments = listOf(
+                navArgument("curso") { type = NavType.StringType },
+                navArgument("asignatura") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val curso = Uri.decode(backStackEntry.arguments?.getString("curso") ?: "")
+            val asignatura = Uri.decode(backStackEntry.arguments?.getString("asignatura") ?: "")
+            DocenteBitacorasScreen(
+                titulo = "Bitácoras: $asignatura",
+                filtroCurso = curso,
+                filtroAsignatura = asignatura,
+                onVolver = { navController.popBackStack() },
+                onVerAportes = { id ->
+                    navController.navigate("docente_aportes/$id")
+                },
+                onEditar = { id ->
+                    navController.navigate("docente_editar_bitacora/$id")
+                }
+            )
+        }
 
            // APORTES DEL DOCENTE
            composable(

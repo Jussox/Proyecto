@@ -6,13 +6,9 @@ import cl.duoc.bitacora2.data.remoto.RemotoRepository
 import cl.duoc.bitacora2.data.remoto.dto.AsignacionDto
 import cl.duoc.bitacora2.data.remoto.dto.BitacoraEdicionRequest
 import cl.duoc.bitacora2.data.remoto.dto.BitacoraRequest
-import cl.duoc.bitacora2.util.MAX_LARGO_TEXTO_LARGO
-import cl.duoc.bitacora2.util.MAX_LARGO_TITULO
 import cl.duoc.bitacora2.util.mensajeDeError
-import cl.duoc.bitacora2.util.validarAnio
-import cl.duoc.bitacora2.util.validarLargo
-import cl.duoc.bitacora2.util.validarMes
-import cl.duoc.bitacora2.util.validarTextoObligatorio
+import cl.duoc.bitacora2.util.validarCamposTextoBitacora
+import cl.duoc.bitacora2.util.validarCrearBitacora
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -121,36 +117,27 @@ class DocenteCrearBitacoraViewModel(
 
     private fun validarCamposTexto(): String? {
         val estado = _uiState.value
-        return when {
-            !validarTextoObligatorio(estado.mes) ||
-            !validarTextoObligatorio(estado.anio) ||
-            !validarTextoObligatorio(estado.titulo) ||
-            !validarTextoObligatorio(estado.proposito) ||
-            !validarTextoObligatorio(estado.instrucciones) ||
-            !validarTextoObligatorio(estado.preguntas) ->
-                "Complete todos los campos obligatorios"
-            !validarMes(estado.mes) ->
-                "Ingrese un mes válido (por ejemplo: Octubre)"
-            !validarAnio(estado.anio) ->
-                "El año debe tener 4 dígitos y ser el actual o el siguiente"
-            !validarLargo(estado.titulo, MAX_LARGO_TITULO) ->
-                "El título no puede superar los 100 caracteres"
-            !validarLargo(estado.proposito, MAX_LARGO_TEXTO_LARGO) ->
-                "El propósito no puede superar los 2000 caracteres"
-            !validarLargo(estado.instrucciones, MAX_LARGO_TEXTO_LARGO) ->
-                "Las instrucciones no pueden superar los 2000 caracteres"
-            !validarLargo(estado.preguntas, MAX_LARGO_TEXTO_LARGO) ->
-                "Las preguntas no pueden superar los 2000 caracteres"
-            else -> null
-        }
+        return validarCamposTextoBitacora(
+            mes = estado.mes,
+            anio = estado.anio,
+            titulo = estado.titulo,
+            proposito = estado.proposito,
+            instrucciones = estado.instrucciones,
+            preguntas = estado.preguntas
+        )
     }
 
     private fun validarParaCrear(): String? {
         val estado = _uiState.value
-        if (estado.asignacionSeleccionada == null) {
-            return "Seleccione un curso y asignatura"
-        }
-        return validarCamposTexto()
+        return validarCrearBitacora(
+            tieneAsignacion = estado.asignacionSeleccionada != null,
+            mes = estado.mes,
+            anio = estado.anio,
+            titulo = estado.titulo,
+            proposito = estado.proposito,
+            instrucciones = estado.instrucciones,
+            preguntas = estado.preguntas
+        )
     }
 
     // ===== ACCIONES =====

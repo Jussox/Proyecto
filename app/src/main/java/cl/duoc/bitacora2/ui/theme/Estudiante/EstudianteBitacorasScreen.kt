@@ -41,8 +41,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cl.duoc.bitacora2.ui.theme.colores.EstadoCerrada
-import cl.duoc.bitacora2.ui.theme.colores.EstadoPublicada
+import cl.duoc.bitacora2.ui.theme.colores.colorEstadoBitacora
+import cl.duoc.bitacora2.ui.theme.colores.colorFondoInsignia
 import cl.duoc.bitacora2.ui.theme.colores.OpcionNoSeleccionadaFondo
 import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
 import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
@@ -207,7 +207,7 @@ fun EstudianteBitacorasScreen(
             items(uiState.bitacoras, key = { it.id ?: 0L }) { b ->
                 val esPublicada = b.estado == "publicada"
                 val textoBadge = if (esPublicada) "Bitácora activa" else "Bitácora cerrada"
-                val colorBadge = if (esPublicada) EstadoPublicada else EstadoCerrada
+                val colorBadge = colorEstadoBitacora(b.estado)
                 val iconoBadge = if (esPublicada) Icons.Default.CheckCircle else Icons.Default.Close
 
                 ElevatedCard(
@@ -231,7 +231,7 @@ fun EstudianteBitacorasScreen(
                         ) {
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = colorBadge.copy(alpha = 0.12f)
+                                color = colorFondoInsignia(colorBadge)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),

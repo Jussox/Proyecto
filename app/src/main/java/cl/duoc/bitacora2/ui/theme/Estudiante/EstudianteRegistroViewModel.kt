@@ -4,13 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cl.duoc.bitacora2.data.remoto.RemotoRepository
 import cl.duoc.bitacora2.data.remoto.dto.RegistroRequest
-import cl.duoc.bitacora2.util.MAX_LARGO_TEXTO_LARGO
 import cl.duoc.bitacora2.util.Sesion
 import cl.duoc.bitacora2.util.mensajeDeError
-import cl.duoc.bitacora2.util.validarCamposRegistro
-import cl.duoc.bitacora2.util.validarEnlace
-import cl.duoc.bitacora2.util.validarFechaClase
-import cl.duoc.bitacora2.util.validarLargo
+import cl.duoc.bitacora2.util.validarFormularioRegistroEstudiante
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -171,30 +167,16 @@ class EstudianteRegistroViewModel(
     private fun validarFormulario(): String? {
         val s = _uiState.value
         val bitacora = s.bitacora
-        if (bitacora == null) return "La bitácora no está disponible"
-
-        val mesBitacora = bitacora.mes ?: ""
-        val anioBitacora = bitacora.anio ?: ""
-
-        if (!validarFechaClase(s.fecha, mesBitacora, anioBitacora)) {
-            return "Ingrese una fecha válida con formato dd/mm/aaaa, no futura y que corresponda al mes y año de la bitácora ($mesBitacora $anioBitacora)"
-        }
-        if (!validarCamposRegistro(s.contenido, s.actividad, s.aprendizaje)) {
-            return "Complete los campos obligatorios (contenido, actividad y aprendizaje)"
-        }
-        if (!validarEnlace(s.enlaces)) {
-            return "El enlace debe comenzar con http:// o https://"
-        }
-        if (!validarLargo(s.contenido, MAX_LARGO_TEXTO_LARGO)) {
-            return "El contenido no puede superar los 2000 caracteres"
-        }
-        if (!validarLargo(s.actividad, MAX_LARGO_TEXTO_LARGO)) {
-            return "La actividad no puede superar los 2000 caracteres"
-        }
-        if (!validarLargo(s.aprendizaje, MAX_LARGO_TEXTO_LARGO)) {
-            return "El aprendizaje no puede superar los 2000 caracteres"
-        }
-        return null
+        return validarFormularioRegistroEstudiante(
+            bitacoraDisponible = bitacora != null,
+            fecha = s.fecha,
+            mesBitacora = bitacora?.mes ?: "",
+            anioBitacora = bitacora?.anio ?: "",
+            contenido = s.contenido,
+            actividad = s.actividad,
+            aprendizaje = s.aprendizaje,
+            enlaces = s.enlaces
+        )
     }
 
     fun guardarBorrador() {

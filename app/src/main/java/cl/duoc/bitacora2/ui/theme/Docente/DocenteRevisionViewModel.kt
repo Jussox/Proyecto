@@ -6,11 +6,9 @@ import cl.duoc.bitacora2.data.remoto.RemotoRepository
 import cl.duoc.bitacora2.data.remoto.dto.BitacoraDto
 import cl.duoc.bitacora2.data.remoto.dto.ComentarioRequest
 import cl.duoc.bitacora2.data.remoto.dto.RegistroDto
-import cl.duoc.bitacora2.util.MAX_LARGO_TEXTO_LARGO
 import cl.duoc.bitacora2.util.Sesion
 import cl.duoc.bitacora2.util.mensajeDeError
-import cl.duoc.bitacora2.util.validarComentario
-import cl.duoc.bitacora2.util.validarLargo
+import cl.duoc.bitacora2.util.validarComentarioDocente
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -134,12 +132,9 @@ class DocenteRevisionViewModel(
         if (_uiState.value.guardando) return
 
         val comentario = _uiState.value.comentario
-        if (!validarComentario(comentario)) {
-            _uiState.update { it.copy(errorComentario = "Escriba un comentario antes de guardar") }
-            return
-        }
-        if (!validarLargo(comentario, MAX_LARGO_TEXTO_LARGO)) {
-            _uiState.update { it.copy(errorComentario = "El comentario no puede superar los 2000 caracteres") }
+        val errorComentario = validarComentarioDocente(comentario, accion = "guardar")
+        if (errorComentario != null) {
+            _uiState.update { it.copy(errorComentario = errorComentario) }
             return
         }
 
@@ -183,12 +178,9 @@ class DocenteRevisionViewModel(
         if (_uiState.value.guardando) return
 
         val comentario = _uiState.value.comentario
-        if (!validarComentario(comentario)) {
-            _uiState.update { it.copy(errorComentario = "Escriba un comentario antes de marcar como revisado") }
-            return
-        }
-        if (!validarLargo(comentario, MAX_LARGO_TEXTO_LARGO)) {
-            _uiState.update { it.copy(errorComentario = "El comentario no puede superar los 2000 caracteres") }
+        val errorComentario = validarComentarioDocente(comentario, accion = "revisar")
+        if (errorComentario != null) {
+            _uiState.update { it.copy(errorComentario = errorComentario) }
             return
         }
 

@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import cl.duoc.bitacora2.data.BitacoraRepository
 import cl.duoc.bitacora2.data.Recordatorio
-import cl.duoc.bitacora2.util.validarFechaRecordatorio
+import cl.duoc.bitacora2.util.validarFechaRecordatorioConMensaje
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,8 +29,9 @@ class DocenteRecordatoriosViewModel(
 
     fun crearRecordatorio(onCrear: ((String, String) -> Unit)? = null, docente: String = "") {
         val estado = _uiState.value
-        if (!validarFechaRecordatorio(estado.fecha)) {
-            _uiState.update { it.copy(mensaje = "Indique una fecha válida (dd/mm/aaaa) que no sea anterior a hoy") }
+        val errorFecha = validarFechaRecordatorioConMensaje(estado.fecha)
+        if (errorFecha != null) {
+            _uiState.update { it.copy(mensaje = errorFecha) }
         } else {
             viewModelScope.launch {
                 repository?.guardarRecordatorio(

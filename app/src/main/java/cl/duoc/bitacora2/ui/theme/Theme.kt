@@ -11,7 +11,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import cl.duoc.bitacora2.ui.theme.colores.Blanco
-import cl.duoc.bitacora2.ui.theme.colores.FondoClaro
+import cl.duoc.bitacora2.ui.theme.colores.FondoPantalla
 import cl.duoc.bitacora2.ui.theme.colores.Pink40
 import cl.duoc.bitacora2.ui.theme.colores.Pink80
 import cl.duoc.bitacora2.ui.theme.colores.Purple40
@@ -29,24 +29,21 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = FondoClaro,
-    surface = FondoClaro,
+    tertiary = Pink40,
+    background = FondoPantalla,
+    surface = FondoPantalla,
     onPrimary = Blanco,
     onSecondary = Blanco,
     onTertiary = Blanco,
     onBackground = TextoSobreFondo,
-    onSurface = TextoSobreFondo,
-    */
+    onSurface = TextoSobreFondo
 )
 
 @Composable
 fun Bitacora2Theme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Desactivamos dynamicColor por defecto para respetar FondoPantalla y los colores de Colores.kt
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
