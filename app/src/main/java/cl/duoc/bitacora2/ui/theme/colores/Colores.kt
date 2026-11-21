@@ -40,6 +40,11 @@ val EstadoPublicada = Color(0xFF00897B)      // Bitácora publicada y activa par
 val EstadoCerrada = Color(0xFFFD0000)        // Bitácora cerrada.
 val EstadoPorDefecto = MoradoApp             // Cualquier estado que no sea uno de los anteriores.
 
+// ===== PANTALLA DE PARTICIPACIÓN DEL DOCENTE =====
+val ParticipacionFondo = Color(0xFFEAF3FC)
+val ParticipacionIcono = Color(0xFF3976B9)
+val ParticipacionTarjeta = Color(0xFFF3F7FC)
+
 // ===== BOTÓN "CERRAR SESIÓN" DEL DOCENTE =====
 val CerrarSesionFondo = Color(0xFFAD1515)    // Fondo rojo del botón; su texto usa Blanco.
 

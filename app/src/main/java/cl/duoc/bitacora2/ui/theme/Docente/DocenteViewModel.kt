@@ -8,7 +8,13 @@ import kotlinx.coroutines.flow.update
 
 class DocenteViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(DocenteUiState())
+    private val _uiState = MutableStateFlow(
+        DocenteUiState(
+            administracionExpandida = true,
+            revisionExpandida = false,
+            seguimientoExpandido = false
+        )
+    )
     val uiState: StateFlow<DocenteUiState> = _uiState.asStateFlow()
 
     fun toggleAdministracion() {

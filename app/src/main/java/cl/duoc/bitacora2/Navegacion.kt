@@ -1,6 +1,12 @@
 
 package cl.duoc.bitacora2
 
+
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -10,35 +16,25 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import cl.duoc.bitacora2.ui.theme.Docente.DocenteAportesScreen
-
-
 import cl.duoc.bitacora2.data.DatosPrueba
-import cl.duoc.bitacora2.ui.theme.Docente.DocenteScreen
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteAportesScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteBitacorasScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteCrearBitacoraScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteParticipacionScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteRecordatoriosScreen
 import cl.duoc.bitacora2.ui.theme.Docente.DocenteRevisionScreen
-
-import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteScreen
-import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteBitacorasScreen
+import cl.duoc.bitacora2.ui.theme.Docente.DocenteScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteBitacoraScreen
+import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteBitacorasScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteHistorialScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteRegistroScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteRetroalimentacionScreen
-
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.tween
-
+import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteScreen
 import cl.duoc.bitacora2.ui.theme.login.LoginScreen
 import cl.duoc.bitacora2.util.Sesion
+
+import cl.duoc.bitacora2.ui.theme.Estudiante.CursosScreen
+import android.net.Uri
 
 @Composable
 fun Navegacion() {
@@ -116,7 +112,7 @@ fun Navegacion() {
                    curso = DatosPrueba.cursoDe(Sesion.usuario),
 
                    onCursos = {
-                       navController.navigate("EstudianteBitacoraScreen")
+                       navController.navigate("estudiante_cursos")
                    },
                    onBitacoras = {
                        navController.navigate("EstudianteBitacoraScreen")
@@ -127,6 +123,7 @@ fun Navegacion() {
                    onRetroalimentacion = {
                        navController.navigate("estudiante_retroalimentacion")
                    },
+
                    onCerrarSesion = {
                        navController.popBackStack(
                            "login",
@@ -135,6 +132,8 @@ fun Navegacion() {
                    }
                )
            }
+
+
 
            // CURSOS / BITÁCORAS DEL ESTUDIANTE
            composable("EstudianteBitacoraScreen") {
@@ -153,6 +152,16 @@ fun Navegacion() {
                    }
                )
            }
+
+        composable("estudiante_cursos") {
+            CursosScreen(
+                titulo = "Mis cursos y asignaturas",
+                asignaciones = DatosPrueba.asignacionesDeEstudiante(Sesion.usuario),
+                textoBoton = "Ver bitácoras",
+                onVolver = { navController.popBackStack() },
+                onElegir = { navController.navigate("EstudianteBitacoraScreen") }
+            )
+        }
 
            // DETALLE DE BITÁCORA DEL ESTUDIANTE
 
@@ -293,7 +302,7 @@ fun Navegacion() {
                    },
 
                    onCursos = {
-                       navController.navigate("docente_bitacoras")
+                       navController.navigate("docente_cursos")
                    },
 
                    onCrear = {
@@ -341,7 +350,25 @@ fun Navegacion() {
                )
            }
 
-           // BITÁCORAS DEL DOCENTE
+
+        composable("docente_cursos") {
+            CursosScreen(
+                titulo = "Mis cursos y asignaturas",
+                asignaciones = DatosPrueba.asignacionesDeDocente(Sesion.usuario),
+                textoBoton = "Ver bitácoras",
+                onVolver = {
+                    navController.popBackStack()
+                },
+                onElegir = { asignacion ->
+                    navController.navigate(
+                        "docente_bitacoras_curso/${Uri.encode(asignacion.curso)}/${Uri.encode(asignacion.asignatura)}"
+                    )
+                }
+            )
+        }
+
+
+        // BITÁCORAS DEL DOCENTE
            composable("docente_bitacoras") {
                DocenteBitacorasScreen(
                    titulo = "Bitácoras mensuales",
