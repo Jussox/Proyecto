@@ -1,61 +1,130 @@
 package cl.duoc.bitacora2.ui.theme.Estudiante
 
 import androidx.lifecycle.ViewModel
-import cl.duoc.bitacora2.data.Registro
-import cl.duoc.bitacora2.data.fechaHoy
+import androidx.lifecycle.viewModelScope
+import cl.duoc.bitacora2.data.remoto.RemotoRepository
+import cl.duoc.bitacora2.data.remoto.dto.RegistroRequest
+import cl.duoc.bitacora2.util.MAX_LARGO_TEXTO_LARGO
+import cl.duoc.bitacora2.util.Sesion
+import cl.duoc.bitacora2.util.mensajeDeError
+import cl.duoc.bitacora2.util.validarCamposRegistro
+import cl.duoc.bitacora2.util.validarEnlace
+import cl.duoc.bitacora2.util.validarFechaClase
+import cl.duoc.bitacora2.util.validarLargo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.text.SimpleDateFormat
-import java.util.Locale
+import kotlinx.coroutines.launch
 
-class EstudianteRegistroViewModel : ViewModel() {
+class EstudianteRegistroViewModel(
+    private val repository: RemotoRepository = RemotoRepository()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EstudianteRegistroUiState())
     val uiState: StateFlow<EstudianteRegistroUiState> = _uiState.asStateFlow()
 
-    private var bitacoraId: Int = 0
-    private var mes: String = ""
-    private var anio: String = ""
-    private var estudiante: String = ""
-    private var registroExistente: Registro? = null
+    companion object {
+        /** Convierte la lista de dudas y la duda en curso a un solo String con saltos de línea. */
+        fun dudasAListoString(lista: List<String>, dudaPendiente: String = ""): String {
+            val todas = if (dudaPendiente.isNotBlank()) lista + dudaPendiente.trim() else lista
+            return todas.joinToString("\n")
+        }
 
-    fun inicializar(
-        bitacoraId: Int,
-        mes: String = "",
-        anio: String = "",
-        estudiante: String,
-        registro: Registro?
-    ) {
-        this.bitacoraId = bitacoraId
-        this.mes = mes
-        this.anio = anio
-        this.estudiante = estudiante
-        this.registroExistente = registro
+        /** Convierte el String guardado en el backend a la lista de dudas separadas. */
+        fun stringADudasLista(texto: String?): List<String> {
+            if (texto.isNullOrBlank()) return emptyList()
+            return texto.lines()
+                .map { it.trim().removePrefix("•").trim() }
+                .filter { it.isNotBlank() }
+        }
+    }
 
-        if (registro != null) {
-            // Si el registro ya existía, separamos las dudas guardadas por línea
-            val dudasSeparadas = if (registro.dudas.isNotBlank()) {
-                registro.dudas.lines().map { it.trim().removePrefix("•").trim() }.filter { it.isNotBlank() }
-            } else {
-                emptyList()
-            }
+    fun inicializar(bitacoraId: Long?, registroId: Long?) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(cargando = true, error = null, estadoInvalido = false) }
+            try {
+                if (registroId != null) {
+                    // Modo edición: cargar registro existente
+                    val registros = repository.obtenerRegistrosEstudiante(Sesion.usuario)
+                    val registro = registros.firstOrNull { it.id == registroId }
+                    if (registro == null) {
+                        _uiState.update { it.copy(cargando = false, error = "Registro no encontrado") }
+                        return@launch
+                    }
 
-            _uiState.update {
-                it.copy(
-                    fecha = registro.fechaClase,
-                    contenido = registro.contenido,
-                    actividad = registro.actividad,
-                    aprendizaje = registro.aprendizaje,
-                    dudas = "",
-                    listaDudas = dudasSeparadas,
-                    fotografias = registro.fotografias,
-                    archivos = registro.archivos,
-                    enlaces = registro.enlaces,
-                    mensaje = "",
-                    mensajeEsError = false
-                )
+                    if (registro.estado != "borrador") {
+                        _uiState.update {
+                            it.copy(
+                                cargando = false,
+                                estadoInvalido = true,
+                                mensajeEstadoInvalido = "Solo se puede editar un registro en estado borrador"
+                            )
+                        }
+                        return@launch
+                    }
+
+                    val bitacora = repository.obtenerBitacoraPorId(registro.bitacoraId ?: 0L)
+                    if (bitacora.estado == "cerrada") {
+                        _uiState.update {
+                            it.copy(
+                                cargando = false,
+                                bitacora = bitacora,
+                                estadoInvalido = true,
+                                mensajeEstadoInvalido = "La bitácora está cerrada. No se pueden modificar ni enviar registros."
+                            )
+                        }
+                        return@launch
+                    }
+
+                    val listaDudas = stringADudasLista(registro.dudas)
+                    _uiState.update {
+                        it.copy(
+                            cargando = false,
+                            bitacora = bitacora,
+                            idRegistro = registro.id,
+                            esModoEdicion = true,
+                            fecha = registro.fechaClase ?: "",
+                            contenido = registro.contenido ?: "",
+                            actividad = registro.actividad ?: "",
+                            aprendizaje = registro.aprendizaje ?: "",
+                            dudas = "",
+                            listaDudas = listaDudas,
+                            fotografias = registro.fotografias ?: "",
+                            archivos = registro.archivos ?: "",
+                            enlaces = registro.enlaces ?: "",
+                            error = null
+                        )
+                    }
+                } else if (bitacoraId != null) {
+                    // Modo creación: cargar bitácora
+                    val bitacora = repository.obtenerBitacoraPorId(bitacoraId)
+                    if (bitacora.estado != "publicada") {
+                        _uiState.update {
+                            it.copy(
+                                cargando = false,
+                                bitacora = bitacora,
+                                estadoInvalido = true,
+                                mensajeEstadoInvalido = "La bitácora está cerrada. No se pueden crear nuevos registros."
+                            )
+                        }
+                        return@launch
+                    }
+
+                    _uiState.update {
+                        it.copy(
+                            cargando = false,
+                            bitacora = bitacora,
+                            esModoEdicion = false,
+                            error = null
+                        )
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _uiState.update { it.copy(cargando = false, error = mensajeDeError(e)) }
             }
         }
     }
@@ -75,7 +144,7 @@ class EstudianteRegistroViewModel : ViewModel() {
             _uiState.update {
                 it.copy(
                     listaDudas = it.listaDudas + texto,
-                    dudas = "" // Limpia el campo para redactar la siguiente
+                    dudas = ""
                 )
             }
         }
@@ -95,95 +164,158 @@ class EstudianteRegistroViewModel : ViewModel() {
         _uiState.update { it.copy(mensaje = mensaje, mensajeEsError = true) }
     }
 
-    private fun fechaValida(fecha: String): Boolean {
-        return try {
-            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            formato.isLenient = false
-            formato.parse(fecha) != null
-        } catch (e: Exception) {
-            false
-        }
+    fun limpiarMensaje() {
+        _uiState.update { it.copy(mensaje = "", mensajeEsError = false) }
     }
 
-    private fun construir(estado: String): Registro {
+    private fun validarFormulario(): String? {
         val s = _uiState.value
-        val reg = registroExistente
+        val bitacora = s.bitacora
+        if (bitacora == null) return "La bitácora no está disponible"
 
-        // Une las dudas agregadas a la lista (y si el alumno dejó algo escrito en el campo, lo incluye)
-        val dudasFinales = if (s.dudas.isNotBlank()) {
-            s.listaDudas + s.dudas.trim()
-        } else {
-            s.listaDudas
+        val mesBitacora = bitacora.mes ?: ""
+        val anioBitacora = bitacora.anio ?: ""
+
+        if (!validarFechaClase(s.fecha, mesBitacora, anioBitacora)) {
+            return "Ingrese una fecha válida con formato dd/mm/aaaa, no futura y que corresponda al mes y año de la bitácora ($mesBitacora $anioBitacora)"
         }
-        val dudasTexto = dudasFinales.joinToString("\n")
-
-        return Registro(
-            id = reg?.id ?: 0,
-            bitacoraId = bitacoraId,
-            estudiante = estudiante,
-            fechaClase = s.fecha,
-            contenido = s.contenido,
-            actividad = s.actividad,
-            aprendizaje = s.aprendizaje,
-            dudas = dudasTexto,
-            fotografias = s.fotografias,
-            archivos = s.archivos,
-            enlaces = s.enlaces,
-            estado = estado,
-            comentario = reg?.comentario ?: "",
-            fechaCreacion = reg?.fechaCreacion ?: fechaHoy(),
-            fechaEnvio = if (estado == "pendiente") fechaHoy() else reg?.fechaEnvio ?: "",
-            fechaRetroalimentacion = reg?.fechaRetroalimentacion ?: "",
-            docenteRevisor = reg?.docenteRevisor ?: ""
-        )
+        if (!validarCamposRegistro(s.contenido, s.actividad, s.aprendizaje)) {
+            return "Complete los campos obligatorios (contenido, actividad y aprendizaje)"
+        }
+        if (!validarEnlace(s.enlaces)) {
+            return "El enlace debe comenzar con http:// o https://"
+        }
+        if (!validarLargo(s.contenido, MAX_LARGO_TEXTO_LARGO)) {
+            return "El contenido no puede superar los 2000 caracteres"
+        }
+        if (!validarLargo(s.actividad, MAX_LARGO_TEXTO_LARGO)) {
+            return "La actividad no puede superar los 2000 caracteres"
+        }
+        if (!validarLargo(s.aprendizaje, MAX_LARGO_TEXTO_LARGO)) {
+            return "El aprendizaje no puede superar los 2000 caracteres"
+        }
+        return null
     }
 
-    private fun limpiar() {
-        _uiState.update { EstudianteRegistroUiState() }
-    }
-
-    fun guardarBorrador(onGuardar: (Registro) -> Unit) {
-        val s = _uiState.value
-        if (!fechaValida(s.fecha)) {
-            _uiState.update {
-                it.copy(
-                    mensaje = "Ingrese una fecha válida con formato dd/MM/aaaa (ejemplo: 16/10/2026)",
-                    mensajeEsError = true
-                )
-            }
+    fun guardarBorrador() {
+        if (_uiState.value.guardando) return
+        val errorValidacion = validarFormulario()
+        if (errorValidacion != null) {
+            _uiState.update { it.copy(mensaje = errorValidacion, mensajeEsError = true) }
             return
         }
 
-        val registro = construir("borrador")
-        onGuardar(registro)
-        _uiState.update {
-            it.copy(
-                mensaje = "Borrador guardado con éxito.",
-                mensajeEsError = false
-            )
+        _uiState.update { it.copy(guardando = true, mensaje = "", mensajeEsError = false) }
+
+        viewModelScope.launch {
+            try {
+                val s = _uiState.value
+                val dudasTexto = dudasAListoString(s.listaDudas, s.dudas)
+                val bitacoraId = s.bitacora?.id ?: throw IllegalStateException("Bitácora no disponible")
+
+                val request = RegistroRequest(
+                    bitacoraId = bitacoraId,
+                    estudiante = Sesion.usuario,
+                    fechaClase = s.fecha.trim(),
+                    contenido = s.contenido.trim(),
+                    actividad = s.actividad.trim(),
+                    aprendizaje = s.aprendizaje.trim(),
+                    dudas = dudasTexto,
+                    fotografias = s.fotografias,
+                    archivos = s.archivos,
+                    enlaces = s.enlaces
+                )
+
+                val idExistente = s.idRegistro
+                if (idExistente != null) {
+                    repository.actualizarRegistro(idExistente, Sesion.usuario, request)
+                    _uiState.update {
+                        it.copy(
+                            guardado = true,
+                            mensaje = "Borrador guardado con éxito.",
+                            mensajeEsError = false
+                        )
+                    }
+                } else {
+                    val creado = repository.crearRegistro(request)
+                    _uiState.update {
+                        it.copy(
+                            idRegistro = creado.id,
+                            guardado = true,
+                            mensaje = "Borrador guardado con éxito.",
+                            mensajeEsError = false
+                        )
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _uiState.update { it.copy(mensaje = mensajeDeError(e), mensajeEsError = true) }
+            } finally {
+                _uiState.update { it.copy(guardando = false) }
+            }
         }
     }
 
-    fun enviarAlDocente(onGuardar: (Registro) -> Unit) {
-        val s = _uiState.value
-        if (!fechaValida(s.fecha) || s.contenido.isBlank() || s.actividad.isBlank() || s.aprendizaje.isBlank()) {
-            _uiState.update {
-                it.copy(
-                    mensaje = "Ingrese una fecha válida (dd/MM/aaaa) y complete contenido, actividad y aprendizaje",
-                    mensajeEsError = true
-                )
-            }
+    fun enviarAlDocente() {
+        if (_uiState.value.guardando) return
+        val errorValidacion = validarFormulario()
+        if (errorValidacion != null) {
+            _uiState.update { it.copy(mensaje = errorValidacion, mensajeEsError = true) }
             return
         }
 
-        val registro = construir("pendiente")
-        onGuardar(registro)
-        limpiar()
-        _uiState.update {
-            it.copy(
-                mensaje = "Registro enviado. Estado: pendiente de revisión.",
-                mensajeEsError = false
-            )
+        _uiState.update { it.copy(guardando = true, mensaje = "", mensajeEsError = false) }
+
+        viewModelScope.launch {
+            try {
+                val s = _uiState.value
+                val dudasTexto = dudasAListoString(s.listaDudas, s.dudas)
+                val bitacoraId = s.bitacora?.id ?: throw IllegalStateException("Bitácora no disponible")
+
+                val request = RegistroRequest(
+                    bitacoraId = bitacoraId,
+                    estudiante = Sesion.usuario,
+                    fechaClase = s.fecha.trim(),
+                    contenido = s.contenido.trim(),
+                    actividad = s.actividad.trim(),
+                    aprendizaje = s.aprendizaje.trim(),
+                    dudas = dudasTexto,
+                    fotografias = s.fotografias,
+                    archivos = s.archivos,
+                    enlaces = s.enlaces
+                )
+
+                val idFinal: Long
+                val idExistente = s.idRegistro
+                if (idExistente != null) {
+                    // Si ya existe ID: primero actualizamos los datos con PUT
+                    repository.actualizarRegistro(idExistente, Sesion.usuario, request)
+                    idFinal = idExistente
+                } else {
+                    // Si es nuevo: creamos con POST
+                    val creado = repository.crearRegistro(request)
+                    idFinal = creado.id ?: throw IllegalStateException("No se obtuvo ID del registro creado")
+                    // Guardamos inmediatamente idRegistro para evitar duplicados si falla el envío
+                    _uiState.update { it.copy(idRegistro = idFinal) }
+                }
+
+                // Luego enviamos al docente
+                repository.enviarRegistro(idFinal, Sesion.usuario)
+                _uiState.update {
+                    it.copy(
+                        guardado = true,
+                        mensaje = "Registro enviado. Estado: pendiente de revisión.",
+                        mensajeEsError = false
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _uiState.update { it.copy(mensaje = mensajeDeError(e), mensajeEsError = true) }
+            } finally {
+                _uiState.update { it.copy(guardando = false) }
+            }
         }
     }
 }

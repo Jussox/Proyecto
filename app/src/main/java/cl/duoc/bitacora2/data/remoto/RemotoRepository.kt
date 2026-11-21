@@ -5,6 +5,8 @@ import cl.duoc.bitacora2.data.remoto.dto.BitacoraDto
 import cl.duoc.bitacora2.data.remoto.dto.BitacoraEdicionRequest
 import cl.duoc.bitacora2.data.remoto.dto.BitacoraRequest
 import cl.duoc.bitacora2.data.remoto.dto.ComentarioRequest
+import cl.duoc.bitacora2.data.remoto.dto.DocenteDto
+import cl.duoc.bitacora2.data.remoto.dto.EstudianteDto
 import cl.duoc.bitacora2.data.remoto.dto.InformeMensualResponse
 import cl.duoc.bitacora2.data.remoto.dto.LoginRequest
 import cl.duoc.bitacora2.data.remoto.dto.LoginResponse
@@ -138,5 +140,15 @@ class RemotoRepository(
 
     suspend fun obtenerAsignacionesEstudiante(usuario: String): List<AsignacionDto> {
         return comprobarRespuesta(api.obtenerAsignacionesEstudiante(usuario))
+    }
+
+    // ========== DOCENTES ==========
+    suspend fun obtenerDocentes(): List<DocenteDto> {
+        return comprobarRespuesta(api.obtenerDocentes())
+    }
+
+    // ========== ESTUDIANTES ==========
+    suspend fun obtenerEstudiantes(curso: String? = null): List<EstudianteDto> {
+        return comprobarRespuesta(api.obtenerEstudiantes(curso))
     }
 }

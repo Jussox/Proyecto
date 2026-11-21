@@ -5,6 +5,8 @@ import cl.duoc.bitacora2.data.remoto.dto.BitacoraDto
 import cl.duoc.bitacora2.data.remoto.dto.BitacoraEdicionRequest
 import cl.duoc.bitacora2.data.remoto.dto.BitacoraRequest
 import cl.duoc.bitacora2.data.remoto.dto.ComentarioRequest
+import cl.duoc.bitacora2.data.remoto.dto.DocenteDto
+import cl.duoc.bitacora2.data.remoto.dto.EstudianteDto
 import cl.duoc.bitacora2.data.remoto.dto.InformeMensualResponse
 import cl.duoc.bitacora2.data.remoto.dto.LoginRequest
 import cl.duoc.bitacora2.data.remoto.dto.LoginResponse
@@ -168,4 +170,14 @@ interface BitacoraApi {
     suspend fun obtenerAsignacionesEstudiante(
         @Path("usuario") usuario: String
     ): Response<List<AsignacionDto>>
+
+    // ========== DOCENTES ==========
+    @GET("docentes")
+    suspend fun obtenerDocentes(): Response<List<DocenteDto>>
+
+    // ========== ESTUDIANTES ==========
+    @GET("estudiantes")
+    suspend fun obtenerEstudiantes(
+        @Query("curso") curso: String? = null
+    ): Response<List<EstudianteDto>>
 }

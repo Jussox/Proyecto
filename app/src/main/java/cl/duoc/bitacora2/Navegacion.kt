@@ -108,8 +108,8 @@ fun Navegacion() {
            // MENÚ ESTUDIANTE
            composable("estudiante") {
                EstudianteScreen(
-                   nombre = DatosPrueba.nombreDe(Sesion.usuario),
-                   curso = DatosPrueba.cursoDe(Sesion.usuario),
+                   nombre = Sesion.nombre,
+                   curso = Sesion.curso,
 
                    onCursos = {
                        navController.navigate("estudiante_cursos")
@@ -139,11 +139,6 @@ fun Navegacion() {
            composable("EstudianteBitacoraScreen") {
                EstudianteBitacorasScreen(
                    titulo = "Mis cursos y asignaturas",
-                   //muestra solo las que están publicadas para el curso del estudiante
-                   bitacoras = bitacoras.filter {
-                       it.curso == DatosPrueba.cursoDe(Sesion.usuario) &&
-                               it.estado == "publicada"
-                   },
                    onVolver = {
                        navController.popBackStack()
                    },
@@ -169,26 +164,19 @@ fun Navegacion() {
                route = "estudiante_bitacora_detalle/{id}",
                arguments = listOf(
                    navArgument("id") {
-                       type = NavType.IntType
+                       type = NavType.LongType
                    }
                )
            ) { backStackEntry ->
-
-               val id = backStackEntry.arguments?.getInt("id")
-
-               val bitacoraSeleccionada = bitacoras.firstOrNull {
-                   it.id == id
-               }
+               val id = backStackEntry.arguments?.getLong("id") ?: 0L
 
                EstudianteBitacoraScreen(
-                   bitacora = bitacoraSeleccionada,
+                   bitacoraId = id,
                    onVolver = {
                        navController.popBackStack()
                    },
                    onNuevoRegistro = {
-                       bitacoraSeleccionada?.let { bitacora ->
-                           navController.navigate("estudiante_registro/${bitacora.id}")
-                       }
+                       navController.navigate("estudiante_registro/$id")
                    }
                )
            }
@@ -198,25 +186,16 @@ fun Navegacion() {
                route = "estudiante_registro/{id}",
                arguments = listOf(
                    navArgument("id") {
-                       type = NavType.IntType
+                       type = NavType.LongType
                    }
                )
            ) { backStackEntry ->
-
-               val id = backStackEntry.arguments?.getInt("id")
-
-               val bitacoraSeleccionada = bitacoras.firstOrNull {
-                   it.id == id
-               }
-
+               val id = backStackEntry.arguments?.getLong("id")
                EstudianteRegistroScreen(
-                   bitacora = bitacoraSeleccionada,
-                   estudiante = Sesion.usuario,
+                   bitacoraId = id,
+                   registroId = null,
                    onVolver = {
                        navController.popBackStack()
-                   },
-                   onGuardar = { registro ->
-                       viewModel.guardarRegistro(registro)
                    }
                )
            }
@@ -224,20 +203,14 @@ fun Navegacion() {
            // HISTORIAL DE REGISTROS DEL ESTUDIANTE
            composable("estudiante_historial") {
                EstudianteHistorialScreen(
-                   registros = registros.filter {
-                       it.estudiante == Sesion.usuario
-                   },
-                   bitacoras = bitacoras,
                    onVolver = {
                        navController.popBackStack()
                    },
-                   onEditar = { registro ->
-                       navController.navigate(
-                           "estudiante_editar_registro/${registro.id}"
-                       )
+                   onEditar = { id ->
+                       navController.navigate("estudiante_editar_registro/$id")
                    },
-                   onEliminar = { id ->
-                       viewModel.eliminarRegistro(id)
+                   onVerRetroalimentacion = {
+                       navController.navigate("estudiante_retroalimentacion")
                    }
                )
            }
@@ -245,8 +218,6 @@ fun Navegacion() {
            // RETROALIMENTACIÓN DEL ESTUDIANTE
            composable("estudiante_retroalimentacion") {
                EstudianteRetroalimentacionScreen(
-                   registros = registros.filter { it.estudiante == Sesion.usuario },
-                   bitacoras = bitacoras,
                    onVolver = { navController.popBackStack() }
                )
            }
@@ -256,36 +227,15 @@ fun Navegacion() {
                route = "estudiante_editar_registro/{registroId}",
                arguments = listOf(
                    navArgument("registroId") {
-                       type = NavType.IntType
+                       type = NavType.LongType
                    }
                )
            ) { backStackEntry ->
-
-               val registroId = backStackEntry.arguments?.getInt("registroId")
-
-               val registroExistente = registros.firstOrNull {
-                   it.id == registroId &&
-                           it.estudiante == Sesion.usuario
-               }
-
-               val bitacoraDelRegistro = bitacoras.firstOrNull {
-                   it.id == registroExistente?.bitacoraId
-               }
-
+               val registroId = backStackEntry.arguments?.getLong("registroId")
                EstudianteRegistroScreen(
-                   bitacora = bitacoraDelRegistro,
-                   estudiante = Sesion.usuario,
-                   registroExistente = registroExistente,
+                   bitacoraId = null,
+                   registroId = registroId,
                    onVolver = {
-                       navController.popBackStack()
-                   },
-                   onGuardar = { registro ->
-                       if (registro.id == 0) {
-                           viewModel.guardarRegistro(registro)
-                       } else {
-                           viewModel.actualizarRegistro(registro)
-                       }
-
                        navController.popBackStack()
                    }
                )
@@ -295,7 +245,8 @@ fun Navegacion() {
            // MENÚ DOCENTE
            composable("docente") {
                DocenteScreen(
-                   nombre = DatosPrueba.nombreDe(Sesion.usuario),
+                   nombre = Sesion.nombre,
+                   // TODO(Paso 6): migrar contadores de Room al backend
                    aportesPendientes = registrosDocente.count { it.estado == "pendiente" },
                    recordatoriosPendientes = recordatorios.count {
                        it.docente == Sesion.usuario && it.estado == "pendiente"
@@ -387,46 +338,42 @@ fun Navegacion() {
                 route = "docente_aportes/{bitacoraId}",
                 arguments = listOf(
                     navArgument("bitacoraId") {
-                        type = NavType.IntType
+                        type = NavType.LongType
                     }
                 )
             ) { backStackEntry ->
-                val bitacoraId = backStackEntry.arguments?.getInt("bitacoraId") ?: 0
+                val bitacoraId = backStackEntry.arguments?.getLong("bitacoraId") ?: 0L
                 DocenteAportesScreen(
+                    bitacoraId = bitacoraId,
                     titulo = "Aportes de estudiantes",
-                    registros = registros.filter { it.bitacoraId == bitacoraId },
-                    bitacoras = bitacoras,
                     estadoInicial = "todos",
                     onVolver = { navController.popBackStack() },
-                    onAbrir = { registroId ->
-                        navController.navigate("docente_revision/$registroId")
+                    onAbrir = { registroId, bId ->
+                        navController.navigate("docente_revision/$registroId?bitacoraId=$bId")
                     }
                 )
             }
 
            // REVISIÓN DE UN APORTE
            composable(
-                route = "docente_revision/{registroId}",
+                route = "docente_revision/{registroId}?bitacoraId={bitacoraId}",
                 arguments = listOf(
                     navArgument("registroId") {
-                        type = NavType.IntType
+                        type = NavType.LongType
+                    },
+                    navArgument("bitacoraId") {
+                        type = NavType.LongType
+                        defaultValue = 0L
                     }
                 )
             ) { backStackEntry ->
-                val registroId = backStackEntry.arguments?.getInt("registroId") ?: 0
-                val registro = registros.firstOrNull { it.id == registroId }
-                val bitacora = bitacoras.firstOrNull { it.id == registro?.bitacoraId }
+                val registroId = backStackEntry.arguments?.getLong("registroId") ?: 0L
+                val bitacoraId = backStackEntry.arguments?.getLong("bitacoraId")?.takeIf { it > 0L }
 
                 DocenteRevisionScreen(
-                    registro = registro,
-                    bitacora = bitacora,
-                    onVolver = { navController.popBackStack() },
-                    onGuardarComentario = { id, comentario ->
-                        viewModel.guardarComentario(id, comentario)
-                    },
-                    onMarcarRevisado = { id ->
-                        viewModel.marcarRevisado(id)
-                    }
+                    registroId = registroId,
+                    bitacoraId = bitacoraId,
+                    onVolver = { navController.popBackStack() }
                 )
             }
 
@@ -481,15 +428,16 @@ fun Navegacion() {
            ) { backStackEntry ->
                val estadoInicial = backStackEntry.arguments?.getString("estadoInicial") ?: "todos"
                DocenteAportesScreen(
+                   bitacoraId = null,
                    titulo = if (estadoInicial == "pendiente")
                        "Aportes pendientes de revisión"
                    else
                        "Aportes de estudiantes",
-                   registros = registrosDocente,
-                   bitacoras = bitacoras,
                    estadoInicial = estadoInicial,
                    onVolver = { navController.popBackStack() },
-                   onAbrir = { registroId -> navController.navigate("docente_revision/$registroId") }
+                   onAbrir = { registroId, bId ->
+                       navController.navigate("docente_revision/$registroId?bitacoraId=$bId")
+                   }
                )
            }
 

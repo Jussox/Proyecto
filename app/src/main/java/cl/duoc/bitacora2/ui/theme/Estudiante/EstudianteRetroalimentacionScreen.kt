@@ -13,45 +13,143 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import cl.duoc.bitacora2.data.Bitacora
-import cl.duoc.bitacora2.data.DatosPrueba
-import cl.duoc.bitacora2.data.Registro
-import cl.duoc.bitacora2.ui.theme.Bitacora2Theme
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 
 @Composable
 fun EstudianteRetroalimentacionScreen(
-    registros: List<Registro>,
-    bitacoras: List<Bitacora>,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    viewModel: EstudianteRetroalimentacionViewModel = viewModel()
 ) {
-    val retroalimentados = registros
-        .filter { it.comentario.isNotBlank() || it.estado == "revisado" }
-        .sortedByDescending { it.fechaRetroalimentacion }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.cargarRetroalimentacion()
+    }
 
     PantallaBase(
         titulo = "Retroalimentación",
         onVolver = onVolver
     ) {
-        if (retroalimentados.isEmpty()) {
+        // 1. Banner de aviso si falla refresco y ya hay lista
+        if (uiState.errorAviso != null) {
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            text = uiState.errorAviso ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { viewModel.limpiarAviso() }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cerrar",
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Cargando a pantalla completa (solo si la lista está vacía)
+        if (uiState.cargando && uiState.registros.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 48.dp, bottom = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
+
+        // 3. Error de carga general (solo si la lista está vacía)
+        else if (uiState.error != null && uiState.registros.isEmpty()) {
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(36.dp)
+                        )
+                        Text(
+                            text = uiState.error ?: "Error al cargar la retroalimentación",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Button(onClick = { viewModel.cargarRetroalimentacion() }) {
+                            Text("Reintentar")
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Lista vacía
+        else if (uiState.registros.isEmpty()) {
             item {
                 Surface(
                     modifier = Modifier
@@ -80,8 +178,9 @@ fun EstudianteRetroalimentacionScreen(
             }
         }
 
-        items(retroalimentados) { r ->
-            val b = bitacoras.firstOrNull { it.id == r.bitacoraId }
+        // 5. Lista de tarjetas de retroalimentación
+        items(uiState.registros) { r ->
+            val b = r.bitacoraId?.let { uiState.bitacorasMap[it] }
 
             ElevatedCard(
                 modifier = Modifier
@@ -119,7 +218,7 @@ fun EstudianteRetroalimentacionScreen(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    text = b?.asignatura ?: "Asignatura",
+                                    text = b?.asignatura?.ifBlank { "Asignatura" } ?: "Asignatura",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -154,15 +253,17 @@ fun EstudianteRetroalimentacionScreen(
                     // Título de la bitácora y curso
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = b?.titulo ?: "Bitácora",
+                            text = b?.titulo?.ifBlank { "Bitácora" } ?: "Bitácora",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        Text(
-                            text = b?.curso ?: "",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        if (!b?.curso.isNullOrBlank()) {
+                            Text(
+                                text = b?.curso ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -188,20 +289,31 @@ fun EstudianteRetroalimentacionScreen(
                         }
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = "Clase del ${r.fechaClase}",
+                                text = "Clase del ${r.fechaClase ?: ""}",
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            Text(
-                                text = r.contenido,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            if (!r.contenido.isNullOrBlank()) {
+                                Text(
+                                    text = r.contenido ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
 
                     // Recuadro destacado: Comentario del docente
-                    if (r.comentario.isNotBlank()) {
+                    val comentario = r.comentario ?: ""
+                    if (comentario.isNotBlank()) {
+                        val docenteRevisorUsuario = r.docenteRevisor ?: ""
+                        val nombreDocente = uiState.docentesMap[docenteRevisorUsuario]
+                        val nombreMostrar = when {
+                            !nombreDocente.isNullOrBlank() -> "Prof. $nombreDocente"
+                            docenteRevisorUsuario.isNotBlank() -> if (docenteRevisorUsuario.startsWith("Prof.")) docenteRevisorUsuario else "Prof. $docenteRevisorUsuario"
+                            else -> "Docente"
+                        }
+
                         Surface(
                             shape = RoundedCornerShape(14.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -231,20 +343,22 @@ fun EstudianteRetroalimentacionScreen(
                                     }
                                     Column {
                                         Text(
-                                            text = DatosPrueba.nombreDe(r.docenteRevisor),
+                                            text = nombreMostrar,
                                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
-                                        Text(
-                                            text = "Retroalimentación el ${r.fechaRetroalimentacion}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        if (!r.fechaRetroalimentacion.isNullOrBlank()) {
+                                            Text(
+                                                text = "Retroalimentación el ${r.fechaRetroalimentacion}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
                                 }
 
                                 Text(
-                                    text = "\"${r.comentario}\"",
+                                    text = "\"$comentario\"",
                                     style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic),
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -254,55 +368,5 @@ fun EstudianteRetroalimentacionScreen(
                 }
             }
         }
-    }
-}
-
-@Preview(
-    name = "Retroalimentación Mejorada",
-    showBackground = true,
-    showSystemUi = true
-)
-@Composable
-fun EstudianteRetroalimentacionPreview() {
-    Bitacora2Theme {
-        EstudianteRetroalimentacionScreen(
-            registros = listOf(
-                Registro(
-                    id = 1,
-                    bitacoraId = 1,
-                    estudiante = "estudiante 1",
-                    fechaClase = "14/11/2024",
-                    contenido = "Comida",
-                    actividad = "Crear pan con palta",
-                    aprendizaje = "Ninguno XD",
-                    dudas = "Ninguna por ahora",
-                    fotografias = "",
-                    archivos = "",
-                    enlaces = "",
-                    estado = "revisado",
-                    comentario = "Repollo",
-                    fechaCreacion = "14/11/2024",
-                    fechaEnvio = "15/11/2024",
-                    fechaRetroalimentacion = "16/11/2024",
-                    docenteRevisor = "Prof. Juan Pérez"
-                )
-            ),
-            bitacoras = listOf(
-                Bitacora(
-                    id = 1,
-                    docente = "Prof. Juan Pérez",
-                    curso = "Humanista?",
-                    asignatura = "Taller de Integración",
-                    mes = "Noviembre",
-                    anio = "2024",
-                    titulo = "Bitácora random",
-                    proposito = "Seguimiento semanal de actividades",
-                    instrucciones = "Completar después de cada sesión",
-                    preguntas = "¿Qué dificultades encontraste?",
-                    estado = "publicada"
-                )
-            ),
-            onVolver = {}
-        )
     }
 }
