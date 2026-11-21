@@ -68,9 +68,10 @@ fun PantallaBase(
 
 // Botón principal de ancho completo; es el botón de acción normal de la app.
 @Composable
-fun BotonAncho(texto: String, onClick: () -> Unit) {
+fun BotonAncho(texto: String, enabled: Boolean = true, onClick: () -> Unit) {
     Button(
         onClick = { onClick() },
+        enabled = enabled,
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(texto)
@@ -79,9 +80,10 @@ fun BotonAncho(texto: String, onClick: () -> Unit) {
 
 // Botón con solo borde y ancho completo, para acciones menos importantes.
 @Composable
-fun BotonSecundario(texto: String, onClick: () -> Unit) {
+fun BotonSecundario(texto: String, enabled: Boolean = true, onClick: () -> Unit) {
     OutlinedButton(
         onClick = { onClick() },
+        enabled = enabled,
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(texto)

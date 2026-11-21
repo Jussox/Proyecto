@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
@@ -52,13 +51,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cl.duoc.bitacora2.data.Bitacora
 import cl.duoc.bitacora2.ui.theme.colores.Blanco
 import cl.duoc.bitacora2.ui.theme.colores.CerrarSesionFondo
-import cl.duoc.bitacora2.ui.theme.colores.EstadoBorrador
-import cl.duoc.bitacora2.ui.theme.colores.EstadoCerrada
 import cl.duoc.bitacora2.ui.theme.colores.EstadoPendiente
-import cl.duoc.bitacora2.ui.theme.colores.EstadoPublicada
 import cl.duoc.bitacora2.ui.theme.colores.MenuMoradoFondo
 import cl.duoc.bitacora2.ui.theme.colores.MenuMoradoIcono
 import cl.duoc.bitacora2.ui.theme.colores.MenuNaranjaFondo
@@ -70,10 +65,6 @@ import cl.duoc.bitacora2.ui.theme.colores.OpcionNoSeleccionadaTexto
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionFondo
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionIcono
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionTarjeta
-import cl.duoc.bitacora2.ui.theme.comun.BotonAncho
-import cl.duoc.bitacora2.ui.theme.comun.BotonSecundario
-import cl.duoc.bitacora2.ui.theme.comun.Dato
-import cl.duoc.bitacora2.ui.theme.comun.Estado
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 import cl.duoc.bitacora2.ui.theme.comun.animacionEntradaExpandir
 import cl.duoc.bitacora2.ui.theme.comun.animacionSalidaContraer
@@ -536,145 +527,5 @@ private fun ItemSubMenuDocente(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp)
         )
-    }
-}
-
-@Composable
-fun DocenteBitacorasScreen(
-    titulo: String,
-    bitacoras: List<Bitacora>,
-    onVolver: () -> Unit,
-    onPublicar: (Int) -> Unit,
-    onCerrar: (Int) -> Unit,
-    onVerAportes: (Int) -> Unit
-) {
-    PantallaBase(titulo = titulo, onVolver = onVolver) {
-        if (bitacoras.isEmpty()) {
-            item {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(48.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            color = OpcionNoSeleccionadaFondo
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Assignment,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                        Text(
-                            text = "No hay bitácoras para mostrar.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-
-        items(bitacoras) { b ->
-            val colorEstado = when (b.estado) {
-                "publicada" -> EstadoPublicada
-                "cerrada" -> EstadoCerrada
-                else -> EstadoBorrador
-            }
-
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(46.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Assignment,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = OpcionNoSeleccionadaFondo
-                            ) {
-                                Text(
-                                    text = Estado.textoDe(b.estado).uppercase(),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = colorEstado
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = b.titulo,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-
-                    Text(
-                        text = "${b.curso} · ${b.asignatura} · ${b.mes} ${b.anio}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                    Dato("Fecha de publicación", b.fechaPublicacion)
-                    Dato("Fecha de cierre", b.fechaCierre)
-
-                    if (b.estado == "guardada") {
-                        BotonAncho("Publicar bitácora") { onPublicar(b.id) }
-                    }
-                    if (b.estado == "publicada") {
-                        BotonAncho("Cerrar bitácora") { onCerrar(b.id) }
-                    }
-                    if (b.estado != "guardada") {
-                        BotonSecundario("Ver aportes") { onVerAportes(b.id) }
-                    }
-                }
-            }
-        }
     }
 }

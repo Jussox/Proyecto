@@ -372,12 +372,12 @@ fun Navegacion() {
            composable("docente_bitacoras") {
                DocenteBitacorasScreen(
                    titulo = "Bitácoras mensuales",
-                   bitacoras = bitacorasDocente,
                    onVolver = { navController.popBackStack() },
-                   onPublicar = { id -> viewModel.publicarBitacora(id) },
-                   onCerrar = { id -> viewModel.cerrarBitacora(id) },
                    onVerAportes = { id ->
                        navController.navigate("docente_aportes/$id")
+                   },
+                   onEditar = { id ->
+                       navController.navigate("docente_editar_bitacora/$id")
                    }
                )
            }
@@ -433,14 +433,20 @@ fun Navegacion() {
            // CREAR BITÁCORA
            composable("docente_crear_bitacora") {
                DocenteCrearBitacoraScreen(
-                   asignaciones = DatosPrueba.asignacionesDeDocente(Sesion.usuario), docente = Sesion.usuario,
-                   onVolver = {
-                       navController.popBackStack()
-                   },
-                   onGuardar = { bitacora ->
-                       viewModel.guardarBitacora(bitacora)
-                       navController.popBackStack()
-                   }
+                   bitacoraId = null,
+                   onVolver = { navController.popBackStack() }
+               )
+           }
+
+           // EDITAR BITÁCORA (modo edición)
+           composable(
+               route = "docente_editar_bitacora/{id}",
+               arguments = listOf(navArgument("id") { type = NavType.LongType })
+           ) { backStackEntry ->
+               val id = backStackEntry.arguments?.getLong("id")
+               DocenteCrearBitacoraScreen(
+                   bitacoraId = id,
+                   onVolver = { navController.popBackStack() }
                )
            }
 
@@ -491,10 +497,8 @@ fun Navegacion() {
            composable("docente_historial") {
                DocenteBitacorasScreen(
                    titulo = "Historial de bitácoras",
-                   bitacoras = bitacorasDocente.filter { it.estado == "cerrada" },
+                   soloCerradas = true,
                    onVolver = { navController.popBackStack() },
-                   onPublicar = { },
-                   onCerrar = { },
                    onVerAportes = { id ->
                        navController.navigate("docente_aportes/$id")
                    }
