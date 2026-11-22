@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -63,4 +64,29 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging)
     ksp(libs.androidx.room.compiler)
+}
+
+kover {
+    reports {
+        filters {
+            includes {
+                classes(
+                    // Lógica pura de validaciones de formularios y reglas de negocio
+                    "cl.duoc.bitacora2.util.Validaciones*",
+                    // Utilidades de traducción de errores HTTP y de red
+                    "cl.duoc.bitacora2.util.ErrorUtils*",
+                    // Gestión de sesión activa en memoria
+                    "cl.duoc.bitacora2.util.Sesion*",
+                    // Repositorio remoto que procesa y valida respuestas de la API REST
+                    "cl.duoc.bitacora2.data.remoto.RemotoRepository*",
+                    // ViewModels de autenticación
+                    "cl.duoc.bitacora2.ui.theme.login.*ViewModel*",
+                    // ViewModels del rol Docente (nombre de paquete real con D mayúscula)
+                    "cl.duoc.bitacora2.ui.theme.Docente.*ViewModel*",
+                    // ViewModels del rol Estudiante (nombre de paquete real con E mayúscula)
+                    "cl.duoc.bitacora2.ui.theme.Estudiante.*ViewModel*"
+                )
+            }
+        }
+    }
 }
