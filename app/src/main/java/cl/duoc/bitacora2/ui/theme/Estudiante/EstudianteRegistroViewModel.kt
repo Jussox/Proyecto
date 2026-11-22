@@ -193,7 +193,7 @@ class EstudianteRegistroViewModel(
             try {
                 val s = _uiState.value
                 val dudasTexto = dudasAListoString(s.listaDudas, s.dudas)
-                val bitacoraId = s.bitacora?.id ?: throw IllegalStateException("Bitácora no disponible")
+                val bitacoraId = s.bitacora!!.id ?: throw IllegalStateException("Bitácora no disponible")
 
                 val request = RegistroRequest(
                     bitacoraId = bitacoraId,
@@ -253,7 +253,7 @@ class EstudianteRegistroViewModel(
             try {
                 val s = _uiState.value
                 val dudasTexto = dudasAListoString(s.listaDudas, s.dudas)
-                val bitacoraId = s.bitacora?.id ?: throw IllegalStateException("Bitácora no disponible")
+                val bitacoraId = s.bitacora!!.id ?: throw IllegalStateException("Bitácora no disponible")
 
                 val request = RegistroRequest(
                     bitacoraId = bitacoraId,
