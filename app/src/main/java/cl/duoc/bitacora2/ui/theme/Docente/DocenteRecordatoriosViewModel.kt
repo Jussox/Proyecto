@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import cl.duoc.bitacora2.data.BitacoraRepository
 import cl.duoc.bitacora2.data.Recordatorio
+import cl.duoc.bitacora2.util.mensajeRecordatorioCompletado
+import cl.duoc.bitacora2.util.mensajeRecordatorioProgramado
 import cl.duoc.bitacora2.util.validarFechaRecordatorioConMensaje
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,43 +22,53 @@ class DocenteRecordatoriosViewModel(
     val uiState: StateFlow<DocenteRecordatoriosUiState> = _uiState.asStateFlow()
 
     fun cambiarTipo(valor: String) {
-        _uiState.update { it.copy(tipo = valor) }
+        _uiState.update { it.copy(tipo = valor, mensaje = "") }
     }
 
     fun cambiarFecha(valor: String) {
-        _uiState.update { it.copy(fecha = valor) }
+        _uiState.update { it.copy(fecha = valor, mensaje = "") }
     }
 
     fun crearRecordatorio(onCrear: ((String, String) -> Unit)? = null, docente: String = "") {
         val estado = _uiState.value
-        val errorFecha = validarFechaRecordatorioConMensaje(estado.fecha)
+        val fechaLimpia = estado.fecha.trim()
+        val errorFecha = validarFechaRecordatorioConMensaje(fechaLimpia)
+
         if (errorFecha != null) {
             _uiState.update { it.copy(mensaje = errorFecha) }
         } else {
+            val tipoSeleccionado = estado.tipo
             viewModelScope.launch {
                 repository?.guardarRecordatorio(
                     Recordatorio(
                         docente = docente,
-                        tipo = estado.tipo,
-                        fechaProgramada = estado.fecha,
+                        tipo = tipoSeleccionado,
+                        fechaProgramada = fechaLimpia,
                         estado = "pendiente"
                     )
                 )
-                onCrear?.invoke(estado.tipo, estado.fecha)
+                onCrear?.invoke(tipoSeleccionado, fechaLimpia)
             }
             _uiState.update {
                 it.copy(
                     fecha = "",
-                    mensaje = "Recordatorio configurado"
+                    mensaje = mensajeRecordatorioProgramado(tipoSeleccionado, fechaLimpia)
                 )
             }
         }
     }
 
-    fun completarRecordatorio(id: Int, onCompletar: ((Int) -> Unit)? = null) {
+    fun completarRecordatorio(
+        id: Int,
+        onCompletar: ((Int) -> Unit)? = null,
+        tipoRecordatorio: String? = null
+    ) {
         viewModelScope.launch {
             repository?.completarRecordatorio(id)
             onCompletar?.invoke(id)
+        }
+        _uiState.update {
+            it.copy(mensaje = mensajeRecordatorioCompletado(tipoRecordatorio))
         }
     }
 }

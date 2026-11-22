@@ -16,13 +16,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.PersonOff
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
@@ -45,15 +48,24 @@ import cl.duoc.bitacora2.data.fechaHoy
 import cl.duoc.bitacora2.ui.theme.colores.EstadoBorrador
 import cl.duoc.bitacora2.ui.theme.colores.EstadoPendiente
 import cl.duoc.bitacora2.ui.theme.colores.EstadoRevisado
+import cl.duoc.bitacora2.ui.theme.colores.MenuMoradoFondo
+import cl.duoc.bitacora2.ui.theme.colores.MenuMoradoIcono
 import cl.duoc.bitacora2.ui.theme.colores.MenuNaranjaFondo
+import cl.duoc.bitacora2.ui.theme.colores.MenuNaranjaIcono
 import cl.duoc.bitacora2.ui.theme.colores.MenuVerdeFondo
+import cl.duoc.bitacora2.ui.theme.colores.MenuVerdeIcono
 import cl.duoc.bitacora2.ui.theme.colores.OpcionNoSeleccionadaFondo
 import cl.duoc.bitacora2.ui.theme.colores.OpcionNoSeleccionadaTexto
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionFondo
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionIcono
 import cl.duoc.bitacora2.ui.theme.colores.ParticipacionTarjeta
+import cl.duoc.bitacora2.ui.theme.colores.SeccionInformeColor
+import cl.duoc.bitacora2.ui.theme.colores.colorAcentoInforme
 import cl.duoc.bitacora2.ui.theme.colores.colorFondoParticipacion
+import cl.duoc.bitacora2.ui.theme.colores.colorFondoTarjetaInforme
+import cl.duoc.bitacora2.ui.theme.colores.colorHeaderInforme
 import cl.duoc.bitacora2.ui.theme.colores.colorParticipacion
+import cl.duoc.bitacora2.ui.theme.comun.AnimacionDetalleInforme
 import cl.duoc.bitacora2.ui.theme.comun.PantallaBase
 
 @Composable
@@ -74,7 +86,7 @@ fun DocenteParticipacionScreen(
 
     PantallaBase(titulo = titulo, onVolver = onVolver) {
 
-        // ENCABEZADO (Estilo tarjeta superior de EstudianteScreen usando tus tokens Participacion*)
+        // ENCABEZADO
         item {
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -116,7 +128,7 @@ fun DocenteParticipacionScreen(
                             Text(
                                 text = when (modo) {
                                     "indicadores" -> "INDICADORES"
-                                    "informe" -> "INFORME"
+                                    "informe" -> "INFORME MENSUAL"
                                     else -> "DOCENTE"
                                 },
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -468,72 +480,95 @@ fun DocenteParticipacionScreen(
                 }
             }
 
-            // INFORME
+            // INFORME (Con bloques diferenciados por color)
             if (modo == "informe") {
 
                 item {
-                    SeccionTitulo("Información general")
-                    Spacer(modifier = Modifier.height(8.dp))
+                    AnimacionDetalleInforme(visible = true) {
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            TarjetaGrupoDatos(
+                                tituloSeccion = "Información general",
+                                icono = Icons.Default.Description,
+                                seccionColor = SeccionInformeColor.GENERAL,
+                                datos = listOf(
+                                    "Bitácora" to bitacora.titulo,
+                                    "Curso y asignatura" to "${bitacora.curso} · ${bitacora.asignatura}",
+                                    "Mes y año" to "${bitacora.mes} ${bitacora.anio}",
+                                    "Docente responsable" to uiState.nombreDocente,
+                                    "Propósito" to bitacora.proposito
+                                )
+                            )
 
-                    TarjetaGrupoDatos(
-                        datos = listOf(
-                            "Bitácora" to bitacora.titulo,
-                            "Curso y asignatura" to "${bitacora.curso} · ${bitacora.asignatura}",
-                            "Mes y año" to "${bitacora.mes} ${bitacora.anio}",
-                            "Docente responsable" to uiState.nombreDocente,
-                            "Propósito" to bitacora.proposito
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    SeccionTitulo("Resultados de participación")
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    TarjetaGrupoDatos(
-                        datos = listOf(
-                            "Participación" to "${participantes.size} de ${estudiantes.size} estudiantes",
-                            "Aportes enviados" to enviados.size.toString(),
-                            "Aportes pendientes" to pendientes.toString(),
-                            "Aportes revisados" to revisados.toString(),
-                            "Estudiantes sin participación" to if (sinParticipacion.isEmpty()) {
-                                "Ninguno"
-                            } else {
-                                sinParticipacion.joinToString(", ") { it.nombre }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                TarjetaIndicador(
+                                    titulo = "Enviados",
+                                    valor = enviados.size.toString(),
+                                    icono = Icons.Default.Assignment,
+                                    colorIcono = ParticipacionIcono,
+                                    colorFondoIcono = ParticipacionFondo,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TarjetaIndicador(
+                                    titulo = "Revisados",
+                                    valor = revisados.toString(),
+                                    icono = Icons.Default.CheckCircle,
+                                    colorIcono = MenuVerdeIcono,
+                                    colorFondoIcono = MenuVerdeFondo,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TarjetaIndicador(
+                                    titulo = "Pendientes",
+                                    valor = pendientes.toString(),
+                                    icono = Icons.Default.PendingActions,
+                                    colorIcono = MenuNaranjaIcono,
+                                    colorFondoIcono = MenuNaranjaFondo,
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
-                        )
-                    )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                            TarjetaGrupoDatos(
+                                tituloSeccion = "Resultados de participación",
+                                icono = Icons.Default.TrendingUp,
+                                seccionColor = SeccionInformeColor.RESULTADOS,
+                                datos = listOf(
+                                    "Participación total" to "${participantes.size} de ${estudiantes.size} estudiantes",
+                                    "Estudiantes sin participación" to if (sinParticipacion.isEmpty()) {
+                                        "Ninguno (100% participación)"
+                                    } else {
+                                        sinParticipacion.joinToString(", ") { it.nombre }
+                                    }
+                                )
+                            )
 
-                    SeccionTitulo("Registro de clases")
-                    Spacer(modifier = Modifier.height(8.dp))
+                            TarjetaGrupoDatos(
+                                tituloSeccion = "Registro de clases",
+                                icono = Icons.Default.MenuBook,
+                                seccionColor = SeccionInformeColor.CLASES,
+                                datos = listOf(
+                                    "Fechas de clases" to enviados.joinToString(", ") { it.fechaClase },
+                                    "Temas trabajados" to enviados.joinToString("; ") { it.contenido }
+                                )
+                            )
 
-                    TarjetaGrupoDatos(
-                        datos = listOf(
-                            "Fechas de clases" to enviados.joinToString(", ") { it.fechaClase },
-                            "Temas trabajados" to enviados.joinToString("; ") { it.contenido }
-                        )
-                    )
+                            TarjetaGrupoDatos(
+                                tituloSeccion = "Fechas del informe",
+                                icono = Icons.Default.CalendarMonth,
+                                seccionColor = SeccionInformeColor.FECHAS,
+                                datos = listOf(
+                                    "Fecha de cierre" to bitacora.fechaCierre,
+                                    "Generación del informe" to fechaHoy()
+                                )
+                            )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    SeccionTitulo("Fechas del informe")
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    TarjetaGrupoDatos(
-                        datos = listOf(
-                            "Fecha de cierre" to bitacora.fechaCierre,
-                            "Generación del informe" to fechaHoy()
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    TarjetaMensaje(
-                        titulo = "Descarga de informe",
-                        descripcion = "La descarga en PDF no está disponible en la versión actual de la aplicación."
-                    )
+                            TarjetaMensaje(
+                                titulo = "Descarga de informe",
+                                descripcion = "La descarga en PDF no está disponible en la versión actual de la aplicación."
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -682,39 +717,90 @@ private fun TarjetaEstudiante(
 
 @Composable
 private fun TarjetaGrupoDatos(
+    tituloSeccion: String,
+    icono: ImageVector,
+    seccionColor: SeccionInformeColor,
     datos: List<Pair<String, String>>
 ) {
+    val fondoTarjeta = colorFondoTarjetaInforme(seccionColor)
+    val fondoHeader = colorHeaderInforme(seccionColor)
+    val acento = colorAcentoInforme(seccionColor)
+
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = fondoTarjeta
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = Color.Transparent,
+            border = BorderStroke(1.dp, acento.copy(alpha = 0.22f))
         ) {
-            datos.forEachIndexed { index, (titulo, valor) ->
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = titulo,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Surface(
+                    color = fondoHeader,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(32.dp),
+                            shape = RoundedCornerShape(9.dp),
+                            color = acento.copy(alpha = 0.15f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = icono,
+                                    contentDescription = null,
+                                    tint = acento,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
 
-                    Text(
-                        text = valor.ifBlank { "Sin información" },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                        Text(
+                            text = tituloSeccion,
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = acento
+                        )
+                    }
                 }
 
-                if (index < datos.lastIndex) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    datos.forEachIndexed { index, (titulo, valor) ->
+                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(
+                                text = titulo.uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = acento.copy(alpha = 0.85f)
+                            )
+
+                            Text(
+                                text = valor.ifBlank { "Sin información" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        if (index < datos.lastIndex) {
+                            HorizontalDivider(
+                                color = acento.copy(alpha = 0.14f)
+                            )
+                        }
+                    }
                 }
             }
         }

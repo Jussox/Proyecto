@@ -129,3 +129,118 @@ fun colorParticipacion(participo: Boolean): Color =
 // Devuelve el color de fondo suave (verde claro o naranja claro) para el badge de participación
 fun colorFondoParticipacion(participo: Boolean): Color =
     if (participo) MenuVerdeFondo else MenuNaranjaFondo
+
+
+// Pantalla: DocenteAportesScreen
+// Devuelve el color de fondo suave para el badge del estado del aporte (Revisado, Pendiente, Borrador)
+fun colorFondoEstadoRegistro(estado: String?): Color = when (estado?.lowercase()) {
+    "revisado" -> MenuVerdeFondo
+    "pendiente" -> MenuNaranjaFondo
+    else -> colorFondoInsignia(EstadoBorrador)
+}
+
+// Pantalla: DocenteAportesScreen
+// Devuelve el color de fondo del avatar del estudiante según el estado de revisión de su aporte
+fun colorFondoAvatarAporte(estado: String?): Color = when (estado?.lowercase()) {
+    "revisado" -> MenuVerdeFondo
+    "pendiente" -> MenuNaranjaFondo
+    else -> ParticipacionFondo
+}
+
+// Pantalla: DocenteAportesScreen
+// Devuelve el color del ícono del avatar del estudiante según el estado de revisión de su aporte
+fun colorIconoAvatarAporte(estado: String?): Color = when (estado?.lowercase()) {
+    "revisado" -> MenuVerdeIcono
+    "pendiente" -> MenuNaranjaIcono
+    else -> ParticipacionIcono
+}
+
+
+// Pantalla: DocenteRecordatoriosScreen
+// Devuelve el color principal según si el recordatorio está pendiente (naranja) o completado (verde)
+fun colorEstadoRecordatorio(estado: String?): Color = when (estado?.lowercase()) {
+    "pendiente" -> MenuNaranjaIcono
+    else -> MenuVerdeIcono
+}
+
+// Pantalla: DocenteRecordatoriosScreen
+// Devuelve el color de fondo suave para el badge y el ícono del recordatorio según su estado
+fun colorFondoEstadoRecordatorio(estado: String?): Color = when (estado?.lowercase()) {
+    "pendiente" -> MenuNaranjaFondo
+    else -> MenuVerdeFondo
+}
+
+// Pantalla: DocenteRecordatoriosScreen (AnimacionMensajeRecordatorio)
+// Devuelve el color de fondo de la tarjeta de notificación según el resultado de la acción
+@Composable
+fun colorFondoBannerRecordatorio(esError: Boolean, esCompletado: Boolean): Color = when {
+    esError -> MaterialTheme.colorScheme.errorContainer
+    esCompletado -> MenuVerdeFondo
+    else -> ParticipacionFondo
+}
+
+// Pantalla: DocenteRecordatoriosScreen (AnimacionMensajeRecordatorio)
+// Devuelve el color del ícono y título del banner según el resultado de la acción
+@Composable
+fun colorAcentoBannerRecordatorio(esError: Boolean, esCompletado: Boolean): Color = when {
+    esError -> MaterialTheme.colorScheme.error
+    esCompletado -> MenuVerdeIcono
+    else -> ParticipacionIcono
+}
+
+// Pantalla: DocenteRecordatoriosScreen (AnimacionMensajeRecordatorio)
+// Devuelve el color del texto descriptivo del banner según el resultado de la acción
+@Composable
+fun colorTextoBannerRecordatorio(esError: Boolean): Color = when {
+    esError -> MaterialTheme.colorScheme.onErrorContainer
+    else -> TextoSobreFondo
+}
+
+// Pantalla: DocenteParticipacionScreen (Modo Informe mensual)
+// Paleta diferenciada por sección para evitar bloques blancos planos
+enum class SeccionInformeColor {
+    GENERAL,
+    RESULTADOS,
+    CLASES,
+    FECHAS
+}
+
+fun colorFondoTarjetaInforme(seccion: SeccionInformeColor): Color = when (seccion) {
+    SeccionInformeColor.GENERAL -> ParticipacionTarjeta      // Azul tenue
+    SeccionInformeColor.RESULTADOS -> Color(0xFFF3FAF5)      // Verde muy suave
+    SeccionInformeColor.CLASES -> Color(0xFFFAF5FF)          // Morado muy suave
+    SeccionInformeColor.FECHAS -> Color(0xFFFFFBF2)          // Naranja/crema muy suave
+}
+
+fun colorHeaderInforme(seccion: SeccionInformeColor): Color = when (seccion) {
+    SeccionInformeColor.GENERAL -> ParticipacionFondo        // Azul suave
+    SeccionInformeColor.RESULTADOS -> MenuVerdeFondo         // Verde claro
+    SeccionInformeColor.CLASES -> MenuMoradoFondo            // Morado claro
+    SeccionInformeColor.FECHAS -> MenuNaranjaFondo           // Amarillo/naranja claro
+}
+
+fun colorAcentoInforme(seccion: SeccionInformeColor): Color = when (seccion) {
+    SeccionInformeColor.GENERAL -> ParticipacionIcono        // Azul medio
+    SeccionInformeColor.RESULTADOS -> MenuVerdeIcono         // Verde oscuro
+    SeccionInformeColor.CLASES -> MenuMoradoIcono            // Morado vivo
+    SeccionInformeColor.FECHAS -> MenuNaranjaIcono           // Naranja oscuro
+}
+
+// Pantalla: DocenteRevisionScreen
+// Tokens visuales para la cabecera, evidencia adjunta y bloques de retroalimentación
+val RevisionHeaderFondo = ParticipacionTarjeta          // Azul tenue de cabecera
+val RevisionReflexionFondo = Color(0xFFFAF5FF)          // Morado muy suave para contenido y aprendizaje
+val RevisionEvidenciaFondo = Color(0xFFFFFBF2)          // Crema muy suave para adjuntos y enlaces
+val RevisionFeedbackFondo = Color(0xFFF3FAF5)           // Verde muy suave para bloque de retroalimentación
+
+fun colorBadgeRevision(estado: String?): Color = when (estado?.lowercase()) {
+    "revisado" -> MenuVerdeIcono
+    "pendiente" -> MenuNaranjaIcono
+    else -> EstadoBorrador
+}
+
+fun colorFondoBadgeRevision(estado: String?): Color = when (estado?.lowercase()) {
+    "revisado" -> MenuVerdeFondo
+    "pendiente" -> MenuNaranjaFondo
+    else -> colorFondoInsignia(EstadoBorrador)
+}

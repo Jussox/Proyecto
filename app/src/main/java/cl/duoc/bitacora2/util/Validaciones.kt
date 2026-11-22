@@ -262,11 +262,11 @@ fun validarCamposTextoBitacora(
 ): String? {
     return when {
         !validarTextoObligatorio(mes) ||
-        !validarTextoObligatorio(anio) ||
-        !validarTextoObligatorio(titulo) ||
-        !validarTextoObligatorio(proposito) ||
-        !validarTextoObligatorio(instrucciones) ||
-        !validarTextoObligatorio(preguntas) ->
+                !validarTextoObligatorio(anio) ||
+                !validarTextoObligatorio(titulo) ||
+                !validarTextoObligatorio(proposito) ||
+                !validarTextoObligatorio(instrucciones) ||
+                !validarTextoObligatorio(preguntas) ->
             "Complete todos los campos obligatorios"
         !validarMes(mes) ->
             "Ingrese un mes válido (por ejemplo: Octubre)"
@@ -330,6 +330,70 @@ fun validarComentarioDocente(comentario: String, accion: String = "guardar"): St
     return null
 }
 
+// Pantalla: DocenteAportesScreen
+// Valida si el texto ingresado en el filtro de fecha tiene un formato parcial o completo válido (solo dígitos y '/')
+fun validarCaracteresFiltroFecha(texto: String): Boolean {
+    return texto.length <= 10 && texto.all { it.isDigit() || it == '/' }
+}
+
+// Pantalla: DocenteAportesScreen
+// Evalúa si un registro de estudiante cumple con los criterios activos de búsqueda y estado
+fun cumpleFiltrosAporte(
+    estudianteUsuario: String,
+    estudianteNombre: String,
+    fechaClase: String,
+    estadoRegistro: String,
+    filtroEstudiante: String,
+    filtroFecha: String,
+    filtroEstado: String
+): Boolean {
+    val cumpleEstudiante = filtroEstudiante.isBlank() ||
+            estudianteUsuario.contains(filtroEstudiante.trim(), ignoreCase = true) ||
+            estudianteNombre.contains(filtroEstudiante.trim(), ignoreCase = true)
+
+    val cumpleFecha = filtroFecha.isBlank() ||
+            fechaClase.contains(filtroFecha.trim())
+
+    val cumpleEstado = filtroEstado == "todos" ||
+            estadoRegistro.equals(filtroEstado, ignoreCase = true)
+
+    return cumpleEstudiante && cumpleFecha && cumpleEstado
+}
+
+// Pantalla: DocenteRecordatoriosScreen / DocenteRecordatoriosViewModel
+enum class TipoMensajeRecordatorio {
+    NINGUNO,
+    ERROR,
+    CREADO,
+    COMPLETADO
+}
+
+// Pantalla: DocenteRecordatoriosScreen
+// Clasifica el mensaje emitido para aplicar el diseño de banner correspondiente
+fun clasificarMensajeRecordatorio(mensaje: String): TipoMensajeRecordatorio {
+    if (mensaje.isBlank()) return TipoMensajeRecordatorio.NINGUNO
+    val texto = mensaje.lowercase(Locale.ROOT)
+    return when {
+        texto.contains("ingresa") ||
+                texto.contains("indique") ||
+                texto.contains("válida") ||
+                texto.contains("pasó") ||
+                texto.contains("anterior") ||
+                texto.contains("error") ||
+                texto.contains("seleccione") -> TipoMensajeRecordatorio.ERROR
+
+        texto.contains("completad") -> TipoMensajeRecordatorio.COMPLETADO
+
+        else -> TipoMensajeRecordatorio.CREADO
+    }
+}
+
+// Pantalla: DocenteRecordatoriosScreen
+// Verifica si el recordatorio sigue pendiente
+fun esRecordatorioPendiente(estado: String?): Boolean {
+    return estado.equals("pendiente", ignoreCase = true)
+}
+
 // Pantalla: DocenteRecordatoriosScreen
 // Valida que la fecha del recordatorio tenga formato válido y no sea anterior a hoy
 fun validarFechaRecordatorio(
@@ -342,11 +406,48 @@ fun validarFechaRecordatorio(
     return !calFecha.before(calHoy)
 }
 
-// Pantalla: DocenteRecordatoriosScreen
-// Valida la fecha del recordatorio devolviendo el mensaje de error o null si es válida
+// Pantalla: DocenteRecordatoriosScreen / DocenteRecordatoriosViewModel
+// Valida la fecha del recordatorio devolviendo un mensaje claro de error o null si es válida
 fun validarFechaRecordatorioConMensaje(fecha: String): String? {
+    if (fecha.isBlank()) {
+        return "Ingresa una fecha programada en formato dd/mm/aaaa antes de continuar."
+    }
     if (!validarFechaRecordatorio(fecha)) {
-        return "Indique una fecha válida (dd/mm/aaaa) que no sea anterior a hoy"
+        return "La fecha ingresada no es válida o ya pasó. Debe tener formato dd/mm/aaaa y ser igual o posterior a hoy."
     }
     return null
+}
+
+// Pantalla: DocenteRecordatoriosViewModel
+// Genera el mensaje de confirmación al programar un nuevo recordatorio
+fun mensajeRecordatorioProgramado(tipo: String, fecha: String): String {
+    return "Recordatorio de \"$tipo\" programado para el $fecha. Ya está visible en tu lista."
+}
+
+// Pantalla: DocenteRecordatoriosViewModel
+// Genera el mensaje de confirmación al marcar un recordatorio como completado
+fun mensajeRecordatorioCompletado(tipo: String? = null): String {
+    return if (!tipo.isNullOrBlank()) {
+        "El recordatorio \"$tipo\" fue marcado como completado."
+    } else {
+        "El recordatorio fue marcado como completado."
+    }
+}
+
+// Pantalla: DocenteRevisionScreen
+// Verifica si el aporte ya fue marcado como revisado
+fun esAporteRevisado(estado: String?): Boolean {
+    return estado.equals("revisado", ignoreCase = true)
+}
+
+// Pantalla: DocenteRevisionScreen
+// Verifica si la ruta o URI de fotografía es válida y no está en blanco
+fun tieneFotografiaValida(uriTexto: String?): Boolean {
+    return !uriTexto.isNullOrBlank() && uriTexto.trim() != "—"
+}
+
+// Pantalla: DocenteRevisionScreen
+// Formatea el contador de caracteres del comentario docente
+fun textoContadorComentario(comentario: String): String {
+    return "${comentario.length} / $MAX_LARGO_TEXTO_LARGO"
 }
