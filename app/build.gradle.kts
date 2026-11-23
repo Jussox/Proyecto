@@ -81,8 +81,10 @@ kover {
                     "cl.duoc.bitacora2.util.ErrorUtils*",
                     // Gestión de sesión activa en memoria
                     "cl.duoc.bitacora2.util.Sesion*",
-                    // Repositorio remoto que procesa y valida respuestas de la API REST
+                    // Repositorio remoto que procesa y valida respuestas de la API REST propia
                     "cl.duoc.bitacora2.data.remoto.RemotoRepository*",
+                    // Repositorio que adapta la respuesta de la API externa de recursos educativos
+                    "cl.duoc.bitacora2.data.externa.RecursosEducativosRepository*",
                     // ViewModels de autenticación
                     "cl.duoc.bitacora2.ui.theme.login.*ViewModel*",
                     // ViewModels del rol Docente (nombre de paquete real con D mayúscula)

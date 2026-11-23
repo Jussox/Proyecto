@@ -31,6 +31,7 @@ import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteHistorialScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteRegistroScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteRetroalimentacionScreen
 import cl.duoc.bitacora2.ui.theme.Estudiante.EstudianteScreen
+import cl.duoc.bitacora2.ui.theme.Estudiante.RecursosEducativosScreen
 import cl.duoc.bitacora2.ui.theme.login.LoginScreen
 import cl.duoc.bitacora2.util.Sesion
 
@@ -96,6 +97,7 @@ fun Navegacion() {
                    onRetroalimentacion = {
                        navController.navigate("estudiante_retroalimentacion")
                    },
+                   onRecursos = { navController.navigate("recursos_educativos") },
 
                    onCerrarSesion = {
                        navController.popBackStack(
@@ -186,6 +188,11 @@ fun Navegacion() {
                        navController.navigate("estudiante_retroalimentacion")
                    }
                )
+           }
+
+           // API EXTERNA: RECURSOS EDUCATIVOS (Wikipedia REST API)
+           composable("recursos_educativos") {
+               RecursosEducativosScreen(onVolver = { navController.popBackStack() })
            }
 
            // RETROALIMENTACIÓN DEL ESTUDIANTE

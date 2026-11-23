@@ -55,6 +55,7 @@ fun EstudianteScreen(
     onBitacoras: () -> Unit,
     onHistorial: () -> Unit,
     onRetroalimentacion: () -> Unit,
+    onRecursos: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     PantallaBase(titulo = "Bitácora") {
@@ -170,6 +171,17 @@ fun EstudianteScreen(
             )
         }
 
+        item {
+            ItemMenuEstudiante(
+                titulo = "Recursos para aprender",
+                subtitulo = "Busca información e imágenes para tus actividades",
+                icono = Icons.Default.MenuBook,
+                colorIcono = MaterialTheme.colorScheme.tertiary,
+                colorFondo = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                onClick = onRecursos
+            )
+        }
+
         item { Spacer(modifier = Modifier.height(12.dp)) }
 
         item {
@@ -276,6 +288,7 @@ fun EstudianteScreenPreview() {
             onBitacoras = {},
             onHistorial = {},
             onRetroalimentacion = {},
+            onRecursos = {},
             onCerrarSesion = {}
         )
     }
