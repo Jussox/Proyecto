@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import retrofit2.Response
 
 class RecursosEducativosRepositoryTest {
     @Test
@@ -24,7 +25,7 @@ class RecursosEducativosRepositoryTest {
                 )
             )
         )
-        coEvery { api.buscarPaginas("sistema solar", 10) } returns respuesta
+        coEvery { api.buscarPaginas("sistema solar", 10) } returns Response.success(respuesta)
 
         val resultado = RecursosEducativosRepository(api).buscarPorTema(" sistema solar ")
 
